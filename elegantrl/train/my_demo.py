@@ -1,6 +1,5 @@
 import torch
 import sys
-import gym
 import os
 import numpy as np
 
@@ -31,16 +30,17 @@ class RequestEnvNoSimWrapper():
         self.if_discrete = False
 
     def reset(self):
-        reset_state = np.asarray(self.env.reset(), dtype=np.float32)
-        #  / self.env.threshold
+        reset_state = np.asarray(self.env.reset(),
+                                 dtype=np.float32) / self.env.threshold
         return reset_state
 
     def step(self, action: np.ndarray):
         # I suggest to set action space as (-1, +1) when you design your own env.
         state, reward, done, info_dict = self.env.step(
             action)  # state, reward, done, info_dict
-        return np.asarray(state, dtype=np.float32), reward, done, info_dict
-        # / self.env.threshold
+        return np.asarray(
+            state,
+            dtype=np.float32) / self.env.threshold, reward, done, info_dict
 
     def get_success_rate(self):
         return self.env.get_success_rate()
@@ -56,7 +56,7 @@ def demo_continuous_action_on_policy():
     gpu_id = 0  # >=0 means GPU ID, -1 means CPU
     drl_id = 0  # int(sys.argv[2])
 
-    env = RequestEnvNoSim()
+    env = RequestEnvNoSimWrapper()
     env.invalid_action_optim = False
     agent = [AgentPPO, AgentPPO_H][drl_id]
 
@@ -101,5 +101,5 @@ def evaluate_agent():
 
 
 if __name__ == "__main__":
-    # demo_continuous_action_on_policy()
-    evaluate_agent()
+    demo_continuous_action_on_policy()
+    # evaluate_agent()
