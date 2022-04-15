@@ -1,14 +1,20 @@
 import sys
 import gym
+import os
+
+curPath = os.path.abspath(os.path.dirname(__file__))
+rootPath = os.path.split(curPath)[0]
+sys.path.append(os.path.split(rootPath)[0])
+
 from elegantrl.train.run import *
 from elegantrl.agents import *
 from elegantrl.train.config import Arguments
 from elegantrl.envs.request_env_no_sim import RequestEnvNoSim
-
 """custom env"""
 
 
 class PendulumEnv(gym.Wrapper):  # [ElegantRL.2021.11.11]
+
     def __init__(self, gym_env_id="Pendulum-v1", target_return=-200):
         # Pendulum-v0 gym.__version__ == 0.17.0
         # Pendulum-v1 gym.__version__ == 0.21.0
@@ -32,12 +38,12 @@ class PendulumEnv(gym.Wrapper):  # [ElegantRL.2021.11.11]
         # PendulumEnv set its action space as (-2, +2). It is bad.  # https://github.com/openai/gym/wiki/Pendulum-v0
         # I suggest to set action space as (-1, +1) when you design your own env.
         state, reward, done, info_dict = self.env.step(
-            action * 2
-        )  # state, reward, done, info_dict
+            action * 2)  # state, reward, done, info_dict
         return state.astype(np.float32), reward, done, info_dict
 
 
 class HumanoidEnv(gym.Wrapper):  # [ElegantRL.2021.11.11]
+
     def __init__(self, gym_env_id="Humanoid-v3", target_return=3000):
         gym.logger.set_level(40)  # Block warning
         super(HumanoidEnv, self).__init__(env=gym.make(gym_env_id))
@@ -61,10 +67,8 @@ class HumanoidEnv(gym.Wrapper):  # [ElegantRL.2021.11.11]
         # action_space.high = 0.4
         # action_space.low = -0.4
         state, reward, done, info_dict = self.env.step(
-            action * 2.5
-        )  # state, reward, done, info_dict
+            action * 2.5)  # state, reward, done, info_dict
         return state.astype(np.float32), reward, done, info_dict
-
 
 
 """demo"""
@@ -73,7 +77,6 @@ class HumanoidEnv(gym.Wrapper):  # [ElegantRL.2021.11.11]
 def demo_continuous_action_on_policy():
     gpu_id = 0  # >=0 means GPU ID, -1 means CPU
     drl_id = 0  # int(sys.argv[2])
-
 
     env = RequestEnvNoSim()
     env.invalid_action_optim = False
