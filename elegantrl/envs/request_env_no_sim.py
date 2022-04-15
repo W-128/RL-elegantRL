@@ -50,12 +50,8 @@ def t_to_zero():
 class RequestEnvNoSim:
 
     def __init__(self):
-        self.target_return = 270
-        self.if_discrete = False
         # action需要归一化转为概率
         self.action_need_softmax = True
-        self.env_name = 'RequestEnvNoSim'
-        self.env_num = 1
         # 状态向量的维数=rtl的级别个数
         # state=(剩余时间为0的请求个数,...,剩余时间为5的请求个数)
         self.state_dim = 6
@@ -94,9 +90,6 @@ class RequestEnvNoSim:
         '''
         self.new_arrive_request_in_dic, self.arriveTime_request_dic = get_arrive_time_request_dic(
             ARRIVE_TIME_INDEX)
-        self.max_step = len(
-            self.new_arrive_request_in_dic
-        ) + self.state_dim  # 每个episode的最大步数（就是从 env.reset() 开始到 env.step()返回 done=True 的步数上限）
         # self.end_request_result_path = curr_path + '/success_request_list/' + curr_time + '/'
         # make_dir(self.end_request_result_path)
 
@@ -125,7 +118,7 @@ class RequestEnvNoSim:
         # debug
         # print('active_request_list:' + str(self.active_request_group_by_remaining_time_list))
 
-        return np.asarray(self.state_record, dtype=np.float32), reward, done, {}
+        return self.state_record, reward, done, {}
 
     # 确保action合法
     def update_env(self, action):
@@ -152,7 +145,7 @@ class RequestEnvNoSim:
 
         # remaining_time==0且还留在active_request_group_by_remaining_time_list中的请求此时失败
         for active_request in self.active_request_group_by_remaining_time_list[
-            0]:
+                0]:
             self.fail_request_list.append(list(active_request))
         self.active_request_group_by_remaining_time_list[0] = []
 
@@ -161,9 +154,9 @@ class RequestEnvNoSim:
                 1, self.active_request_group_by_remaining_time_list.__len__()):
             self.active_request_group_by_remaining_time_list[i - 1] = []
             for active_request in self.active_request_group_by_remaining_time_list[
-                i]:
+                    i]:
                 active_request[REMAINING_TIME_INDEX] = active_request[
-                                                           REMAINING_TIME_INDEX] - 1
+                    REMAINING_TIME_INDEX] - 1
                 self.active_request_group_by_remaining_time_list[i - 1].append(
                     list(active_request))
 
@@ -292,7 +285,7 @@ class RequestEnvNoSim:
                 request.append(request_in_dic[RTL_INDEX])
                 now_new_arrive_request_list[request[REMAINING_TIME_INDEX] //
                                             TIME_UNIT_IN_ON_SECOND].append(
-                    request)
+                                                request)
         return now_new_arrive_request_list
 
     #   初始状态
@@ -305,7 +298,7 @@ class RequestEnvNoSim:
         self.active_request_group_by_remaining_time_list = self.get_new_arrive_request_list(
         )
         self.active_request_group_by_remaining_time_list_to_state()
-        return np.asarray(self.state_record, dtype=np.float32)
+        return self.state_record
 
     def get_active_request_sum(self):
         sum = 0
@@ -335,7 +328,8 @@ class RequestEnvNoSim:
         submit_request_num_per_second_list = [0] * t
         for success_request in self.success_request_list:
             submit_request_num_per_second_list[
-                success_request[ARRIVE_TIME_INDEX] + success_request[WAIT_TIME_INDEX]] += 1
+                success_request[ARRIVE_TIME_INDEX] +
+                success_request[WAIT_TIME_INDEX]] += 1
 
         return np.var(submit_request_num_per_second_list)
 

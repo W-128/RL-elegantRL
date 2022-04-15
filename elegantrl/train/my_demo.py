@@ -1,6 +1,8 @@
+import torch
 import sys
 import gym
 import os
+import numpy as np
 
 curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = os.path.split(curPath)[0]
@@ -10,65 +12,41 @@ from elegantrl.train.run import *
 from elegantrl.agents import *
 from elegantrl.train.config import Arguments
 from elegantrl.envs.request_env_no_sim import RequestEnvNoSim
+from elegantrl.train.evaluator import get_episode_return_and_step_and_success_rate_and_more_provision
 """custom env"""
 
 
-class PendulumEnv(gym.Wrapper):  # [ElegantRL.2021.11.11]
+class RequestEnvNoSimWrapper():
 
-    def __init__(self, gym_env_id="Pendulum-v1", target_return=-200):
-        # Pendulum-v0 gym.__version__ == 0.17.0
-        # Pendulum-v1 gym.__version__ == 0.21.0
-        gym.logger.set_level(40)  # Block warning
-        super(PendulumEnv, self).__init__(env=gym.make(gym_env_id))
-
-        # from elegantrl.envs.Gym import get_gym_env_info
-        # get_gym_env_info(env, if_print=True)  # use this function to print the env information
-        self.env_num = 1  # the env number of VectorEnv is greater than 1
-        self.env_name = gym_env_id  # the name of this env.
-        self.max_step = 200  # the max step of each episode
-        self.state_dim = 3  # feature number of state
-        self.action_dim = 1  # feature number of action
-        self.if_discrete = False  # discrete action or continuous action
-        self.target_return = target_return  # episode return is between (-1600, 0)
+    def __init__(self) -> None:
+        self.env = RequestEnvNoSim()
+        self.env_num = 1
+        self.env_name = 'RequestEnvNoSim'
+        self.max_step = len(
+            self.env.new_arrive_request_in_dic
+        ) + self.env.state_dim  # 每个episode的最大步数（就是从 env.reset() 开始到 env.step()返回 done=True 的步数上限）
+        self.state_dim = self.env.state_dim  # feature number of state
+        self.action_dim = self.env.action_dim  # feature number of action
+        self.target_return = 270
+        self.if_discrete = False
 
     def reset(self):
-        return self.env.reset().astype(np.float32)
+        reset_state = np.asarray(self.env.reset(), dtype=np.float32)
+        #  / self.env.threshold
+        return reset_state
 
     def step(self, action: np.ndarray):
-        # PendulumEnv set its action space as (-2, +2). It is bad.  # https://github.com/openai/gym/wiki/Pendulum-v0
         # I suggest to set action space as (-1, +1) when you design your own env.
         state, reward, done, info_dict = self.env.step(
-            action * 2)  # state, reward, done, info_dict
-        return state.astype(np.float32), reward, done, info_dict
+            action)  # state, reward, done, info_dict
+        return np.asarray(state, dtype=np.float32), reward, done, info_dict
+        # / self.env.threshold
 
+    def get_success_rate(self):
+        return self.env.get_success_rate()
 
-class HumanoidEnv(gym.Wrapper):  # [ElegantRL.2021.11.11]
-
-    def __init__(self, gym_env_id="Humanoid-v3", target_return=3000):
-        gym.logger.set_level(40)  # Block warning
-        super(HumanoidEnv, self).__init__(env=gym.make(gym_env_id))
-
-        # from elegantrl.envs.Gym import get_gym_env_info
-        # get_gym_env_info(env, if_print=True)  # use this function to print the env information
-        self.env_num = 1  # the env number of VectorEnv is greater than 1
-        self.env_name = gym_env_id  # the name of this env.
-        self.max_step = 1000  # the max step of each episode
-        self.state_dim = 376  # feature number of state
-        self.action_dim = 17  # feature number of action
-        self.if_discrete = False  # discrete action or continuous action
-        self.target_return = target_return  # episode return is between (-1600, 0)
-
-    def reset(self):
-        return self.env.reset()
-
-    def step(self, action: np.ndarray):
-        # PendulumEnv set its action space as (-2, +2). It is bad.  # https://github.com/openai/gym/wiki/Pendulum-v0
-        # I suggest to set action space as (-1, +1) when you design your own env.
-        # action_space.high = 0.4
-        # action_space.low = -0.4
-        state, reward, done, info_dict = self.env.step(
-            action * 2.5)  # state, reward, done, info_dict
-        return state.astype(np.float32), reward, done, info_dict
+    def get_more_provision(self):
+        return self.env.get_more_provision()
 
 
 """demo"""
@@ -98,5 +76,30 @@ def demo_continuous_action_on_policy():
         train_and_evaluate_mp(args)
 
 
+def evaluate_agent():
+    env = RequestEnvNoSimWrapper()
+    env.invalid_action_optim = False
+    agent = AgentPPO
+    args = Arguments(agent, env=env)
+    act = agent(args.net_dim, env.state_dim, env.action_dim).act
+    actor_path = "./RequestEnvNoSim_PPO_0/actor_15253455_00270.234.pth"
+    act.load_state_dict(
+        torch.load(actor_path, map_location=lambda storage, loc: storage))
+
+    eval_times = 4
+    r_s_success_rate_more_provision_ary = [
+        get_episode_return_and_step_and_success_rate_and_more_provision(
+            env, act) for _ in range(eval_times)
+    ]
+    r_s_success_rate_more_provision_ary = np.array(
+        r_s_success_rate_more_provision_ary, dtype=np.float32)
+    r_avg, s_avg, success_rate_avg, more_provision_avg = r_s_success_rate_more_provision_ary.mean(
+        axis=0)  # average of episode return and episode step
+
+    print("奖励平均值：{:.1f}, 步数平均值：{:.1f}, 成功率平均值：{:.1f}%, 超供量平均值：{:.1f}".format(
+        r_avg, s_avg, success_rate_avg, more_provision_avg))
+
+
 if __name__ == "__main__":
-    demo_continuous_action_on_policy()
+    # demo_continuous_action_on_policy()
+    evaluate_agent()
