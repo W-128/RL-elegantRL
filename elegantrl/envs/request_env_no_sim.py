@@ -7,6 +7,8 @@ import time
 import csv
 
 curPath = os.path.abspath(os.path.dirname(__file__))
+rootPath = os.path.split(curPath)[0]
+sys.path.append(rootPath)
 sys.path.append(curPath + '/my_common')
 
 from my_common.get_data import get_arrive_time_request_dic
@@ -190,7 +192,6 @@ class RequestEnvNoSim:
             if action[index] > len(
                     self.active_request_group_by_remaining_time_list[index]):
                 is_valid_action = True
-                # debug
                 self.invalid_action_times += 1
                 break
         # 不可行动作置为最接近invalid_action的合法动作
@@ -199,9 +200,9 @@ class RequestEnvNoSim:
                 if action[index] > len(
                         self.active_request_group_by_remaining_time_list[index]
                 ):
-                    edited_action[-1] += len(
+                    edited_action[-1] += action[index] - len(
                         self.active_request_group_by_remaining_time_list[index]
-                    ) - action[index]
+                    )
                     edited_action[index] = len(
                         self.active_request_group_by_remaining_time_list[index]
                     )
@@ -319,7 +320,8 @@ class RequestEnvNoSim:
             more_provision_list.append(
                 (success_request[RTL_INDEX] - success_request[WAIT_TIME_INDEX])
                 / success_request[RTL_INDEX])
-        return np.sum(more_provision_list)
+        return 100.0 * np.sum(more_provision_list) / len(
+            self.success_request_list)
 
     def get_success_request(self):
         return self.success_request_list, WAIT_TIME_INDEX, RTL_INDEX

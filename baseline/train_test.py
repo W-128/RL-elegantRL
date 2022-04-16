@@ -14,7 +14,8 @@ def test(cfg, env, agent):
             break
     print('该回合奖励：' + str(ep_reward))
     print('成功率：{:.1f}%'.format(env.get_success_rate() * 100))
-    print('超供量：{:.1f}'.format(env.get_more_provision()))
-    print('每秒提交量方差：{:.1f}'.format(env.get_submit_request_num_per_second_variance()))
+    print('超供量：{:.1f}%'.format(env.get_more_provision()))
+    print('每秒提交量方差：{:.1f}'.format(
+        env.get_submit_request_num_per_second_variance()))
     print('完成测试！')
     return env.get_success_request()

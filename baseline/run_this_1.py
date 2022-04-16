@@ -1,4 +1,10 @@
+import sys
 import os
+
+curPath = os.path.abspath(os.path.dirname(__file__))
+rootPath = os.path.split(curPath)[0]
+sys.path.append(rootPath)
+
 from elegantrl.envs.request_env_no_sim import RequestEnvNoSim
 from agent import RandomChoose, EDF, EDFSubmitThreshold
 from train_test import test

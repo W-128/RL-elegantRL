@@ -166,8 +166,9 @@ def get_episode_return_and_step(env,
     return episode_return, episode_step
 
 
-def get_episode_return_and_step_and_success_rate_and_more_provision(
-        env, act) -> (float, int, float, float):  # [ElegantRL.2022.01.01]
+def get_episode_return_and_step_and_success_rate_and_more_provision_and_variance(
+        env,
+        act) -> (float, int, float, float, float):  # [ElegantRL.2022.01.01]
     max_step = env.max_step
     if_discrete = env.if_discrete
     device = next(
@@ -192,7 +193,8 @@ def get_episode_return_and_step_and_success_rate_and_more_provision(
     episode_step += 1
     episode_success_rate = env.get_success_rate() * 100
     episode_more_provision = env.get_more_provision()
-    return episode_return, episode_step, episode_success_rate, episode_more_provision
+    episode_variance = env.get_submit_request_num_per_second_variance()
+    return episode_return, episode_step, episode_success_rate, episode_more_provision, episode_variance
 
 
 def save_learning_curve(

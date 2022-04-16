@@ -1,3 +1,4 @@
+from fcntl import F_SETFL
 import torch
 import sys
 import os
@@ -11,7 +12,7 @@ from elegantrl.train.run import *
 from elegantrl.agents import *
 from elegantrl.train.config import Arguments
 from elegantrl.envs.request_env_no_sim import RequestEnvNoSim
-from elegantrl.train.evaluator import get_episode_return_and_step_and_success_rate_and_more_provision
+from elegantrl.train.evaluator import get_episode_return_and_step_and_success_rate_and_more_provision_and_variance
 """custom env"""
 
 
@@ -48,6 +49,9 @@ class RequestEnvNoSimWrapper():
     def get_more_provision(self):
         return self.env.get_more_provision()
 
+    def get_submit_request_num_per_second_variance(self):
+        return self.env.get_submit_request_num_per_second_variance()
+
 
 """demo"""
 
@@ -82,22 +86,24 @@ def evaluate_agent():
     agent = AgentPPO
     args = Arguments(agent, env=env)
     act = agent(args.net_dim, env.state_dim, env.action_dim).act
-    actor_path = "./RequestEnvNoSim_PPO_0/actor_15253455_00270.234.pth"
+    actor_path = "./RequestEnvNoSim_PPO_0/actor_07133493_00270.363.pth"
     act.load_state_dict(
         torch.load(actor_path, map_location=lambda storage, loc: storage))
 
     eval_times = 4
-    r_s_success_rate_more_provision_ary = [
-        get_episode_return_and_step_and_success_rate_and_more_provision(
+    r_s_success_rate_more_provision_variance_ary = [
+        get_episode_return_and_step_and_success_rate_and_more_provision_and_variance(
             env, act) for _ in range(eval_times)
     ]
-    r_s_success_rate_more_provision_ary = np.array(
-        r_s_success_rate_more_provision_ary, dtype=np.float32)
-    r_avg, s_avg, success_rate_avg, more_provision_avg = r_s_success_rate_more_provision_ary.mean(
+    r_s_success_rate_more_provision_variance_ary = np.array(
+        r_s_success_rate_more_provision_variance_ary, dtype=np.float32)
+    r_avg, s_avg, success_rate_avg, more_provision_avg, varience_avg = r_s_success_rate_more_provision_variance_ary.mean(
         axis=0)  # average of episode return and episode step
 
-    print("奖励平均值：{:.1f}, 步数平均值：{:.1f}, 成功率平均值：{:.1f}%, 超供量平均值：{:.1f}".format(
-        r_avg, s_avg, success_rate_avg, more_provision_avg))
+    print(
+        "奖励平均值：{:.1f}, 步数平均值：{:.1f}, 成功率平均值：{:.1f}%, 超供量平均值：{:.1f}%, 方差平均值：{:.1f}"
+        .format(r_avg, s_avg, success_rate_avg, more_provision_avg,
+                varience_avg))
 
 
 if __name__ == "__main__":
