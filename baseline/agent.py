@@ -39,20 +39,22 @@ class EDFSubmitThreshold:
         self.action_dim = action_dim  # 总的动作个数
 
     def predict(self, observation, threshold):
+        observation_temp = list(observation)
         action = [0] * self.action_dim
         remaining_num = threshold
-        for index in range(len(observation)):
-            if observation[index] != 0:
-                if remaining_num > observation[index]:
-                    action[index] = observation[index]
-                    remaining_num = remaining_num - observation[index]
-                    observation[index] = 0
+        for index in range(len(observation_temp)):
+            if remaining_num == 0:
+                break
+            if observation_temp[index] != 0:
+                if remaining_num > observation_temp[index]:
+                    action[index] = observation_temp[index]
+                    remaining_num = remaining_num - observation_temp[index]
+                    observation_temp[index] = 0
                 else:
                     action[index] = remaining_num
-                    observation[index] = observation[index] - remaining_num
+                    observation_temp[index] = observation_temp[index] - remaining_num
                     remaining_num = 0
         if remaining_num != 0:
             action[-1] = remaining_num
 
         return action
-

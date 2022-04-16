@@ -192,9 +192,9 @@ def get_episode_return_and_step_and_success_rate_and_more_provision_and_variance
     episode_return = getattr(env, "episode_return", episode_return)
     episode_step += 1
     episode_success_rate = env.get_success_rate() * 100
-    episode_more_provision = env.get_more_provision()
+    episode_more_provision_sum = env.get_more_provision_sum()
     episode_variance = env.get_submit_request_num_per_second_variance()
-    return episode_return, episode_step, episode_success_rate, episode_more_provision, episode_variance
+    return episode_return, episode_step, episode_success_rate, episode_more_provision_sum, episode_variance
 
 
 def save_learning_curve(

@@ -59,20 +59,22 @@ make_dir(random_choose_cfg.result_path)  # 创建模型路径的文件夹
 agent = RandomChoose(env.action_dim)
 success_request, waiting_time_index, rtl_index = test(random_choose_cfg, env,
                                                       agent)
-plot_waiting_time_and_require_time(success_request, waiting_time_index,
-                                   rtl_index, random_choose_cfg)
+# plot_waiting_time_and_require_time(success_request, waiting_time_index,
+#                                    rtl_index, random_choose_cfg)
 
+print("==========================================================")
 edf_config = EDFConfig()
 make_dir(edf_config.result_path)  # 创建模型路径的文件夹
 agent = EDF(env.action_dim)
 success_request, waiting_time_index, rtl_index = test(edf_config, env, agent)
-plot_waiting_time_and_require_time(success_request, waiting_time_index,
-                                   rtl_index, edf_config)
+# plot_waiting_time_and_require_time(success_request, waiting_time_index,
+#                                    rtl_index, edf_config)
 
+print("==========================================================")
 edf_submit_threshold_config = EDFSubmitThresholdConfig()
 make_dir(edf_submit_threshold_config.result_path)  # 创建模型路径的文件夹
 agent = EDFSubmitThreshold(env.action_dim)
 success_request, waiting_time_index, rtl_index = test(
     edf_submit_threshold_config, env, agent)
-plot_waiting_time_and_require_time(success_request, waiting_time_index,
-                                   rtl_index, edf_submit_threshold_config)
+# plot_waiting_time_and_require_time(success_request, waiting_time_index,
+#                                    rtl_index, edf_submit_threshold_config)
