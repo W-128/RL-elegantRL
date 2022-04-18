@@ -17,7 +17,7 @@ from elegantrl.train.evaluator import get_episode_return_and_step_and_success_ra
 
 class RequestEnvNoSimWrapper():
 
-    def __init__(self, invalid_action_penalty_scale=-0.25) -> None:
+    def __init__(self, invalid_action_penalty_scale=-0.5) -> None:
         self.env = RequestEnvNoSim()
         self.env_num = 1
         self.env_name = 'RequestEnvNoSim'
@@ -86,7 +86,7 @@ def evaluate_agent():
     agent = AgentPPO
     args = Arguments(agent, env=env)
     act = agent(args.net_dim, env.state_dim, env.action_dim).act
-    actor_path = "./RequestEnvNoSim_PPO_0/actor_52063993_00159.550.pth"
+    actor_path = "./RequestEnvNoSim_PPO_0/actor_07157679_00125.375.pth"
     act.load_state_dict(
         torch.load(actor_path, map_location=lambda storage, loc: storage))
 
