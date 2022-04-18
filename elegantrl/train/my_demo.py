@@ -17,7 +17,7 @@ from elegantrl.train.evaluator import get_episode_return_and_step_and_success_ra
 
 class RequestEnvNoSimWrapper():
 
-    def __init__(self, invalid_action_penalty_scale=0) -> None:
+    def __init__(self, invalid_action_penalty_scale=-0.25) -> None:
         self.env = RequestEnvNoSim()
         self.env_num = 1
         self.env_name = 'RequestEnvNoSim'
@@ -107,5 +107,5 @@ def evaluate_agent():
 
 
 if __name__ == "__main__":
-    # demo_continuous_action_on_policy()
-    evaluate_agent()
+    demo_continuous_action_on_policy()
+    # evaluate_agent()
