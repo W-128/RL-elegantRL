@@ -98,16 +98,20 @@ class RequestEnvNoSim:
         # self.end_request_result_path = curr_path + '/success_request_list/' + curr_time + '/'
         # make_dir(self.end_request_result_path)
 
+    # action归一化转为概率再转为数量
+    def numpy_a_to_action(self, action):
+        action = torch.Tensor(action)
+        action = nn.Softmax(dim=0)(action)
+        action = list(action.detach().cpu().numpy())
+        for index in range(len(action) - 1):
+            action[index] = int(round(action[index] * self.threshold, 0))
+        action[-1] = self.threshold - sum(action[:-1])
+        return action
+
     # 返回奖励值和下一个状态
     def step(self, action):
-        # action归一化转为概率再转为数量
         if self.action_need_softmax:
-            action = torch.Tensor(action)
-            action = nn.Softmax(dim=0)(action)
-            action = list(action.detach().cpu().numpy())
-            for index in range(len(action) - 1):
-                action[index] = int(round(action[index] * self.threshold, 0))
-            action[-1] = self.threshold - sum(action[:-1])
+            action = self.numpy_a_to_action(action)
         # debug
         # print('action: ' + str(action))
         # print('t:' + str(t))
