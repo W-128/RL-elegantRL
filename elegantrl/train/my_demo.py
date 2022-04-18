@@ -12,13 +12,12 @@ from elegantrl.agents import *
 from elegantrl.train.config import Arguments
 from elegantrl.envs.request_env_no_sim import RequestEnvNoSim
 from elegantrl.train.evaluator import get_episode_return_and_step_and_success_rate_and_more_provision_and_variance
-
 """custom env"""
 
 
 class RequestEnvNoSimWrapper():
 
-    def __init__(self, invalid_action_penalty_scale=-0.5) -> None:
+    def __init__(self, invalid_action_penalty_scale=0) -> None:
         self.env = RequestEnvNoSim()
         self.env_num = 1
         self.env_name = 'RequestEnvNoSim'
@@ -87,7 +86,7 @@ def evaluate_agent():
     agent = AgentPPO
     args = Arguments(agent, env=env)
     act = agent(args.net_dim, env.state_dim, env.action_dim).act
-    actor_path = "./RequestEnvNoSim_PPO_0/actor_02118107_00197.706.pth"
+    actor_path = "./RequestEnvNoSim_PPO_0/actor_52063993_00159.550.pth"
     act.load_state_dict(
         torch.load(actor_path, map_location=lambda storage, loc: storage))
 
@@ -103,10 +102,10 @@ def evaluate_agent():
 
     print(
         "奖励平均值：{:.1f}, 步数平均值：{:.1f}, 成功率平均值：{:.1f}%, 超供量平均值：{:.1f}, 方差平均值：{:.1f}"
-            .format(r_avg, s_avg, success_rate_avg, more_provision_avg,
-                    varience_avg))
+        .format(r_avg, s_avg, success_rate_avg, more_provision_avg,
+                varience_avg))
 
 
 if __name__ == "__main__":
-    demo_continuous_action_on_policy()
-    # evaluate_agent()
+    # demo_continuous_action_on_policy()
+    evaluate_agent()

@@ -2,11 +2,11 @@
 **/__pycache__
 
 # Saved actor/critic networks from training
-*.pth
+# *.pth
 
 # Plots, recorders, replay buffers
-*plot_*.jpg
-*recorder.npy
+# *plot_*.jpg
+# *recorder.npy
 *replay*.npz
 
 # Runs created by Isaac Gym
