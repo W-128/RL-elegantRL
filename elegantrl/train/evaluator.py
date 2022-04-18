@@ -2,11 +2,13 @@ import os
 import time
 import torch
 import numpy as np
+from my_common.utils import make_dir
 
 
 class Evaluator:  # [ElegantRL.2022.01.01]
 
     def __init__(self, cwd, agent_id, eval_env, args):
+        self.save_s_tensor_list_and_a_tensor_list = 0
         self.recorder = list()  # total_step, r_avg, r_std, obj_c, ...
         self.recorder_path = f"{cwd}/recorder.npy"
 
@@ -59,6 +61,14 @@ class Evaluator:  # [ElegantRL.2022.01.01]
 
             r_std, s_std = rewards_steps_ary.std(
                 axis=0)  # standard dev. of episode return and episode step
+
+            if self.save_s_tensor_list_and_a_tensor_list == 0:
+                make_dir('.\episode_evaluate')
+            s_a_list = get_episode_s_tensor_list_and_a_tensor_list(self.eval_env, act)
+            np.save('.\episode_evaluate\evaluate_episode' + str(self.save_s_tensor_list_and_a_tensor_list) + '.npy',
+                    np.array(s_a_list))
+            self.save_s_tensor_list_and_a_tensor_list += 1
+
             """save the policy network"""
             if_save = r_avg > self.r_max
             if if_save:  # save checkpoint with highest episode return
@@ -156,7 +166,7 @@ def get_episode_return_and_step(env,
         if if_discrete:
             a_tensor = a_tensor.argmax(dim=1)
         action = (a_tensor.detach().cpu().numpy()[0]
-                  )  # not need detach(), because using torch.no_grad() outside
+        )  # not need detach(), because using torch.no_grad() outside
         state, reward, done, _ = env.step(action)
         episode_return += reward
         if done:
@@ -164,6 +174,53 @@ def get_episode_return_and_step(env,
     episode_return = getattr(env, "episode_return", episode_return)
     episode_step += 1
     return episode_return, episode_step
+
+
+def get_episode_s_tensor_list_and_a_tensor_list(env,
+                                                act) -> (float, int):  # [ElegantRL.2022.01.01]
+    """Usage
+    eval_times = 4
+    net_dim = 2 ** 7
+    actor_path = './LunarLanderContinuous-v2_PPO_1/actor.pth'
+
+    env = build_env(env_func=env_func, env_args=env_args)
+    act = agent(net_dim, env.state_dim, env.action_dim, gpu_id=gpu_id).act
+    act.load_state_dict(torch.load(actor_path, map_location=lambda storage, loc: storage))
+
+    r_s_ary = [get_episode_return_and_step(env, act) for _ in range(eval_times)]
+    r_s_ary = np.array(r_s_ary, dtype=np.float32)
+    r_avg, s_avg = r_s_ary.mean(axis=0)  # average of episode return and episode step
+    """
+    max_step = env.max_step
+    if_discrete = env.if_discrete
+    device = next(
+        act.parameters()).device  # net.parameters() is a Python generator.
+
+    state = env.reset()
+    episode_step = None
+    episode_return = 0.0  # sum of rewards in an episode
+    s_a_list = []
+
+    for episode_step in range(max_step):
+        s_a = []
+        s_a.append(state)
+        s_tensor = torch.as_tensor(state, dtype=torch.float32,
+                                   device=device).unsqueeze(0)
+        a_tensor = act(s_tensor)
+
+        if if_discrete:
+            a_tensor = a_tensor.argmax(dim=1)
+        action = (a_tensor.detach().cpu().numpy()[0]
+        )  # not need detach(), because using torch.no_grad() outside
+        s_a.append(action)
+        state, reward, done, _ = env.step(action)
+        episode_return += reward
+        s_a_list.append(s_a)
+        if done:
+            break
+    episode_return = getattr(env, "episode_return", episode_return)
+    episode_step += 1
+    return s_a_list
 
 
 def get_episode_return_and_step_and_success_rate_and_more_provision_and_variance(
@@ -184,7 +241,7 @@ def get_episode_return_and_step_and_success_rate_and_more_provision_and_variance
         if if_discrete:
             a_tensor = a_tensor.argmax(dim=1)
         action = (a_tensor.detach().cpu().numpy()[0]
-                  )  # not need detach(), because using torch.no_grad() outside
+        )  # not need detach(), because using torch.no_grad() outside
         state, reward, done, _ = env.step(action)
         episode_return += reward
         if done:
@@ -198,10 +255,10 @@ def get_episode_return_and_step_and_success_rate_and_more_provision_and_variance
 
 
 def save_learning_curve(
-    recorder=None,
-    cwd=".",
-    save_title="learning curve",
-    fig_name="plot_learning_curve.jpg",
+        recorder=None,
+        cwd=".",
+        save_title="learning curve",
+        fig_name="plot_learning_curve.jpg",
 ):
     if recorder is None:
         recorder = np.load(f"{cwd}/recorder.npy")
@@ -308,7 +365,7 @@ def demo_evaluator_actor_pth():
 
     actor_path = "./LunarLanderContinuous-v2_PPO_1/actor.pth"
     eval_times = 4
-    net_dim = 2**7
+    net_dim = 2 ** 7
     """init"""
     env = build_env(env_func=env_func, env_args=env_args)
     act = agent(net_dim, env.state_dim, env.action_dim, gpu_id=gpu_id).act
@@ -399,7 +456,7 @@ def run():
             "action_dim": 2,
             "if_discrete": False,
             "target_return": 200,
-            "eval_times": 2**4,
+            "eval_times": 2 ** 4,
             "id": "LunarLanderContinuous-v2",
         },
         {
@@ -410,7 +467,7 @@ def run():
             "action_dim": 4,
             "if_discrete": False,
             "target_return": 300,
-            "eval_times": 2**3,
+            "eval_times": 2 ** 3,
             "id": "BipedalWalker-v3",
         },
     ][flag_id]

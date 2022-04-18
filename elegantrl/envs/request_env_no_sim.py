@@ -19,7 +19,7 @@ import torch
 # t=1000ms
 TIME_UNIT = 1
 TIME_UNIT_IN_ON_SECOND = int(1 / TIME_UNIT)
-
+THRESHOLD = int(40 / TIME_UNIT_IN_ON_SECOND)
 # 实时用的话，这个地方无法事先写好，只能每秒来append
 # 现在先 直接从文件读取
 
@@ -47,6 +47,18 @@ def t_add_one():
 def t_to_zero():
     global t
     t = 0
+
+
+
+def numpy_a_to_action(numpy_a):
+    ten_a = torch.Tensor(numpy_a)
+    softmax_a = nn.Softmax(dim=0)(ten_a)
+    probability_a = list(softmax_a.detach().cpu().numpy())
+    action = [0] * len(probability_a)
+    for index in range(len(probability_a) - 1):
+        action[index] = int(round(probability_a[index] * THRESHOLD, 0))
+    action[-1] = THRESHOLD - sum(action[:-1])
+    return action
 
 
 class RequestEnvNoSim:
@@ -81,7 +93,7 @@ class RequestEnvNoSim:
         self.fail_request_list = []
         self.episode = 0
         # 引擎能承受的单位时间最大并发量
-        self.threshold = int(40 / TIME_UNIT_IN_ON_SECOND)
+        self.threshold = THRESHOLD
         self.call_get_reward_times = 0
         self.invalid_action_times = 0
         self.need_evaluate_env_correct = False
@@ -98,20 +110,20 @@ class RequestEnvNoSim:
         # self.end_request_result_path = curr_path + '/success_request_list/' + curr_time + '/'
         # make_dir(self.end_request_result_path)
 
-    # action归一化转为概率再转为数量
-    def numpy_a_to_action(self, action):
-        action = torch.Tensor(action)
-        action = nn.Softmax(dim=0)(action)
-        action = list(action.detach().cpu().numpy())
-        for index in range(len(action) - 1):
-            action[index] = int(round(action[index] * self.threshold, 0))
-        action[-1] = self.threshold - sum(action[:-1])
-        return action
+    # # action归一化转为概率再转为数量
+    # def numpy_a_to_action(self, action):
+    #     action = torch.Tensor(action)
+    #     action = nn.Softmax(dim=0)(action)
+    #     action = list(action.detach().cpu().numpy())
+    #     for index in range(len(action) - 1):
+    #         action[index] = int(round(action[index] * self.threshold, 0))
+    #     action[-1] = self.threshold - sum(action[:-1])
+    #     return action
 
     # 返回奖励值和下一个状态
     def step(self, action):
         if self.action_need_softmax:
-            action = self.numpy_a_to_action(action)
+            action = numpy_a_to_action(action)
         # debug
         # print('action: ' + str(action))
         # print('t:' + str(t))
@@ -354,6 +366,3 @@ class RequestEnvNoSim:
                 success_request[WAIT_TIME_INDEX]] += 1
 
         return np.var(submit_request_num_per_second_list)
-
-
-env = RequestEnvNoSim()
