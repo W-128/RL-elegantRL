@@ -55,7 +55,7 @@ class RequestEnvNoSim:
         # 奖励参数设置
         self.more_provision_penalty_scale = 0
         self.success_reward_scale = 1
-        self.more_than_threshold_penalty_scale = -1
+        self.more_than_threshold_penalty_scale = -4
         self.beta = 1
         self.c = -1
         # action需要从概率到数量
@@ -102,8 +102,10 @@ class RequestEnvNoSim:
         number_action = [0] * len(probability_action)
         for index in range(len(probability_action)):
             number_action[index] = int(
-                round(probability_action[index] * len(self.active_request_group_by_remaining_time_list[index]
-                                                      ), 0))
+                round(
+                    probability_action[index] *
+                    len(self.active_request_group_by_remaining_time_list[index]
+                        ), 0))
         return number_action
 
     # 返回奖励值和下一个状态
@@ -151,7 +153,7 @@ class RequestEnvNoSim:
 
         # remaining_time==0且还留在active_request_group_by_remaining_time_list中的请求此时失败
         for active_request in self.active_request_group_by_remaining_time_list[
-            0]:
+                0]:
             self.fail_request_list.append(list(active_request))
         self.active_request_group_by_remaining_time_list[0] = []
 
@@ -160,9 +162,9 @@ class RequestEnvNoSim:
                 1, self.active_request_group_by_remaining_time_list.__len__()):
             self.active_request_group_by_remaining_time_list[i - 1] = []
             for active_request in self.active_request_group_by_remaining_time_list[
-                i]:
+                    i]:
                 active_request[REMAINING_TIME_INDEX] = active_request[
-                                                           REMAINING_TIME_INDEX] - 1
+                    REMAINING_TIME_INDEX] - 1
                 self.active_request_group_by_remaining_time_list[i - 1].append(
                     list(active_request))
 
@@ -191,18 +193,17 @@ class RequestEnvNoSim:
         self.call_get_reward_times += 1
         more_than_threshold_penalty = 0
         if sum(action) > self.threshold:
-            more_than_threshold_penalty = (sum(action) - self.threshold) / self.threshold
+            more_than_threshold_penalty = (sum(action) -
+                                           self.threshold) / self.threshold
         # 超供惩罚
         more_provision_penalty = 0
         for index in range(1, self.action_dim - 1):
             more_provision_penalty -= action[index] * index
-        more_provision_penalty = more_provision_penalty / (self.threshold * self.state_dim)
+        more_provision_penalty = more_provision_penalty / (self.threshold *
+                                                           self.state_dim)
 
         # 成功率奖励
-        success_reward_list = []
-        for i in range(len(action)):
-            success_reward_list.append(action[i] * np.power(self.beta, i))
-        success_reward = np.sum(success_reward_list) / self.threshold
+        success_reward = min(sum(action), self.threshold) / self.threshold
         fail_num = 0
         if action[0] < len(
                 self.active_request_group_by_remaining_time_list[0]):
@@ -262,7 +263,7 @@ class RequestEnvNoSim:
                 request.append(request_in_dic[RTL_INDEX])
                 now_new_arrive_request_list[request[REMAINING_TIME_INDEX] //
                                             TIME_UNIT_IN_ON_SECOND].append(
-                    request)
+                                                request)
         return now_new_arrive_request_list
 
     #   初始状态
@@ -302,15 +303,15 @@ class RequestEnvNoSim:
     def get_more_provision_sum(self):
         more_provision_list = []
         for success_request in self.success_request_list:
-            more_provision_list.append(
-                success_request[RTL_INDEX] - success_request[WAIT_TIME_INDEX]
-            )
+            more_provision_list.append(success_request[RTL_INDEX] -
+                                       success_request[WAIT_TIME_INDEX])
         return np.sum(more_provision_list)
 
     def get_success_request(self):
         return self.success_request_list, WAIT_TIME_INDEX, RTL_INDEX
 
-    def get_submit_request_num_per_second_variance_and_more_than_threshold_rate(self):
+    def get_submit_request_num_per_second_variance_and_more_than_threshold_rate(
+            self):
         submit_request_num_per_second_list = [0] * t
         for success_request in self.success_request_list:
             submit_request_num_per_second_list[
@@ -321,5 +322,6 @@ class RequestEnvNoSim:
             if submit_request_num_per_second > self.threshold:
                 more_than_threshold_times += 1
 
-        return np.var(submit_request_num_per_second_list), 100.0 * more_than_threshold_times / sum(
-            submit_request_num_per_second_list)
+        return np.var(submit_request_num_per_second_list
+                      ), 100.0 * more_than_threshold_times / sum(
+                          submit_request_num_per_second_list)

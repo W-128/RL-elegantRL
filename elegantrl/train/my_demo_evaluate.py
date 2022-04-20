@@ -18,7 +18,7 @@ from elegantrl.train.evaluator import \
 
 class RequestEnvNoSimWrapper():
 
-    def __init__(self, more_than_threshold_penalty_scale=-3) -> None:
+    def __init__(self, more_than_threshold_penalty_scale=-4) -> None:
         self.env = RequestEnvNoSim()
         self.env_num = 1
         self.env_name = 'RequestEnvNoSim'
@@ -56,32 +56,31 @@ class RequestEnvNoSimWrapper():
         )
 
 
-"""demo"""
-
-
-def demo_continuous_action_on_policy():
-    gpu_id = 0  # >=0 means GPU ID, -1 means CPU
-    drl_id = 0  # int(sys.argv[2])
-
-    env = RequestEnvNoSimWrapper()
-    env.invalid_action_optim = False
-    agent = [AgentPPO, AgentPPO_H][drl_id]
-
-    print("agent", agent.__name__)
-    print("gpu_id", gpu_id)
-    print("env_name", env.env_name)
+def evaluate_agent():
+    env = RequestEnvNoSimWrapper(more_than_threshold_penalty_scale=0)
+    agent = AgentPPO
     args = Arguments(agent, env=env)
-    args.gamma = 0.98
-    args.env.target_return = 180  # set target_reward manually for env 'Pendulum-v0'
-    args.learner_gpus = gpu_id
-    args.random_seed += gpu_id
+    act = agent(args.net_dim, env.state_dim, env.action_dim).act
+    actor_path = 'RequestEnvNoSim_PPO_0/actor_00974997_00185.450.pth'
+    act.load_state_dict(
+        torch.load(actor_path, map_location=lambda storage, loc: storage))
 
-    if_check = 1
-    if if_check:
-        train_and_evaluate(args)
-    else:
-        train_and_evaluate_mp(args)
+    eval_times = 4
+    r_s_success_rate_more_provision_variance_more_than_threshold_rate_ary = [
+        get_episode_return_and_step_and_success_rate_and_more_provision_and_variance_and_more_than_threshold_rate(
+            env, act) for _ in range(eval_times)
+    ]
+    r_s_success_rate_more_provision_variance_more_than_threshold_rate_ary = np.array(
+        r_s_success_rate_more_provision_variance_more_than_threshold_rate_ary,
+        dtype=np.float32)
+    r_avg, s_avg, success_rate_avg, more_provision_avg, variance_avg, more_than_threshold_rate_avg = r_s_success_rate_more_provision_variance_more_than_threshold_rate_ary.mean(
+        axis=0)  # average of episode return and episode step
+
+    print(
+        "奖励平均值：{:.1f}, 步数平均值：{:.1f}, 成功率平均值：{:.1f}%, 超供量平均值：{:.1f}, 方差平均值：{:.1f}, 提交量大于阈值的概率：{:.1f}%"
+        .format(r_avg, s_avg, success_rate_avg, more_provision_avg,
+                variance_avg, more_than_threshold_rate_avg))
 
 
 if __name__ == "__main__":
-    demo_continuous_action_on_policy()
+    evaluate_agent()
