@@ -55,7 +55,7 @@ class RequestEnvNoSim:
         # 奖励参数设置
         self.more_provision_penalty_scale = 0
         self.success_reward_scale = 1
-        self.more_than_threshold_penalty_scale = -0.25
+        self.more_than_threshold_penalty_scale = -1
         self.beta = 1
         self.c = -1
         # action需要从概率到数量
@@ -191,8 +191,7 @@ class RequestEnvNoSim:
         self.call_get_reward_times += 1
         more_than_threshold_penalty = 0
         if sum(action) > self.threshold:
-            more_than_threshold_penalty = sum(action) - self.threshold
-
+            more_than_threshold_penalty = (sum(action) - self.threshold) / self.threshold
         # 超供惩罚
         more_provision_penalty = 0
         for index in range(1, self.action_dim - 1):

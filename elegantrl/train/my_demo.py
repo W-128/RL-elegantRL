@@ -19,7 +19,7 @@ from elegantrl.train.evaluator import \
 
 class RequestEnvNoSimWrapper():
 
-    def __init__(self, more_than_threshold_penalty_scale=-0.25) -> None:
+    def __init__(self, more_than_threshold_penalty_scale=-1) -> None:
         self.env = RequestEnvNoSim()
         self.env_num = 1
         self.env_name = 'RequestEnvNoSim'

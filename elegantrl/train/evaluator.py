@@ -63,12 +63,14 @@ class Evaluator:  # [ElegantRL.2022.01.01]
                 axis=0)  # standard dev. of episode return and episode step
 
             if self.save_s_tensor_list_and_a_tensor_list == 0:
-                make_dir('.\episode_evaluate')
-            s_a_list = get_episode_s_tensor_list_and_a_tensor_list(self.eval_env, act)
-            np.save('.\episode_evaluate\evaluate_episode' + str(self.save_s_tensor_list_and_a_tensor_list) + '.npy',
-                    np.array(s_a_list))
+                make_dir('./episode_evaluate')
+            s_a_list = get_episode_s_tensor_list_and_a_tensor_list(
+                self.eval_env, act)
+            np.save(
+                './episode_evaluate/evaluate_episode' +
+                str(self.save_s_tensor_list_and_a_tensor_list) + '.npy',
+                np.array(s_a_list))
             self.save_s_tensor_list_and_a_tensor_list += 1
-
             """save the policy network"""
             if_save = r_avg > self.r_max
             if if_save:  # save checkpoint with highest episode return
