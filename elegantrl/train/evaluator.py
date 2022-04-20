@@ -63,12 +63,14 @@ class Evaluator:  # [ElegantRL.2022.01.01]
                 axis=0)  # standard dev. of episode return and episode step
 
             if self.save_s_tensor_list_and_a_tensor_list == 0:
-                make_dir('.\episode_evaluate')
-            s_a_list = get_episode_s_tensor_list_and_a_tensor_list(self.eval_env, act)
-            np.save('.\episode_evaluate\evaluate_episode' + str(self.save_s_tensor_list_and_a_tensor_list) + '.npy',
-                    np.array(s_a_list))
+                make_dir('./episode_evaluate')
+            s_a_list = get_episode_s_tensor_list_and_a_tensor_list(
+                self.eval_env, act)
+            np.save(
+                './episode_evaluate/evaluate_episode' +
+                str(self.save_s_tensor_list_and_a_tensor_list) + '.npy',
+                np.array(s_a_list))
             self.save_s_tensor_list_and_a_tensor_list += 1
-
             """save the policy network"""
             if_save = r_avg > self.r_max
             if if_save:  # save checkpoint with highest episode return
@@ -166,7 +168,7 @@ def get_episode_return_and_step(env,
         if if_discrete:
             a_tensor = a_tensor.argmax(dim=1)
         action = (a_tensor.detach().cpu().numpy()[0]
-        )  # not need detach(), because using torch.no_grad() outside
+                  )  # not need detach(), because using torch.no_grad() outside
         state, reward, done, _ = env.step(action)
         episode_return += reward
         if done:
@@ -176,8 +178,8 @@ def get_episode_return_and_step(env,
     return episode_return, episode_step
 
 
-def get_episode_s_tensor_list_and_a_tensor_list(env,
-                                                act) -> (float, int):  # [ElegantRL.2022.01.01]
+def get_episode_s_tensor_list_and_a_tensor_list(
+        env, act) -> (float, int):  # [ElegantRL.2022.01.01]
     """Usage
     eval_times = 4
     net_dim = 2 ** 7
@@ -211,7 +213,7 @@ def get_episode_s_tensor_list_and_a_tensor_list(env,
         if if_discrete:
             a_tensor = a_tensor.argmax(dim=1)
         action = (a_tensor.detach().cpu().numpy()[0]
-        )  # not need detach(), because using torch.no_grad() outside
+                  )  # not need detach(), because using torch.no_grad() outside
         s_a.append(action)
         state, reward, done, _ = env.step(action)
         episode_return += reward
@@ -241,7 +243,7 @@ def get_episode_return_and_step_and_success_rate_and_more_provision_and_variance
         if if_discrete:
             a_tensor = a_tensor.argmax(dim=1)
         action = (a_tensor.detach().cpu().numpy()[0]
-        )  # not need detach(), because using torch.no_grad() outside
+                  )  # not need detach(), because using torch.no_grad() outside
         state, reward, done, _ = env.step(action)
         episode_return += reward
         if done:
@@ -255,10 +257,10 @@ def get_episode_return_and_step_and_success_rate_and_more_provision_and_variance
 
 
 def save_learning_curve(
-        recorder=None,
-        cwd=".",
-        save_title="learning curve",
-        fig_name="plot_learning_curve.jpg",
+    recorder=None,
+    cwd=".",
+    save_title="learning curve",
+    fig_name="plot_learning_curve.jpg",
 ):
     if recorder is None:
         recorder = np.load(f"{cwd}/recorder.npy")
@@ -365,7 +367,7 @@ def demo_evaluator_actor_pth():
 
     actor_path = "./LunarLanderContinuous-v2_PPO_1/actor.pth"
     eval_times = 4
-    net_dim = 2 ** 7
+    net_dim = 2**7
     """init"""
     env = build_env(env_func=env_func, env_args=env_args)
     act = agent(net_dim, env.state_dim, env.action_dim, gpu_id=gpu_id).act
@@ -456,7 +458,7 @@ def run():
             "action_dim": 2,
             "if_discrete": False,
             "target_return": 200,
-            "eval_times": 2 ** 4,
+            "eval_times": 2**4,
             "id": "LunarLanderContinuous-v2",
         },
         {
@@ -467,7 +469,7 @@ def run():
             "action_dim": 4,
             "if_discrete": False,
             "target_return": 300,
-            "eval_times": 2 ** 3,
+            "eval_times": 2**3,
             "id": "BipedalWalker-v3",
         },
     ][flag_id]
