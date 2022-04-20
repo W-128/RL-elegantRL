@@ -16,7 +16,8 @@ def test(cfg, env, agent):
     print('成功率：{:.1f}%'.format(env.get_success_rate() * 100))
     print('超供率：{:.1f}%'.format(env.get_more_provision_rate()))
     print('超供量：{:.1f}'.format(env.get_more_provision_sum()))
-    print('每秒提交量方差：{:.1f}'.format(
-        env.get_submit_request_num_per_second_variance()))
+    variance, more_than_threshold_rate = env.get_submit_request_num_per_second_variance_and_more_than_threshold_rate()
+    print('每秒提交量方差：{:.1f}'.format(variance))
+    print('提交量大于阈值的概率：{:.1f}%'.format(more_than_threshold_rate))
     print('完成测试！')
     return env.get_success_request()

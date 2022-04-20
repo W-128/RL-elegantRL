@@ -17,8 +17,6 @@ class RandomChoose:
             observation[submit_index] -= 1
             action[submit_index] += 1
             remaining_num -= 1
-        if remaining_num != 0:
-            action[-1] = remaining_num
         return action
 
 
@@ -29,8 +27,6 @@ class EDF:
     def predict(self, observation, threshold):
         action = [0] * self.action_dim
         action[0] = min(threshold, observation[0])
-        if action[0] < threshold:
-            action[-1] = threshold - action[0]
         return action
 
 
@@ -54,7 +50,6 @@ class EDFSubmitThreshold:
                     action[index] = remaining_num
                     observation_temp[index] = observation_temp[index] - remaining_num
                     remaining_num = 0
-        if remaining_num != 0:
-            action[-1] = remaining_num
+
 
         return action

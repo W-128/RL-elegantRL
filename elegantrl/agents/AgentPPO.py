@@ -71,7 +71,7 @@ class AgentPPO(AgentBase):
             ten_a, ten_n = [
                 ten.cpu() for ten in get_action(ten_s.to(self.device))
             ]  # different
-            next_s, reward, done, _ = env.step(get_a_to_e(ten_a)[0].numpy())
+            next_s, reward, done, _ = env.step(torch.nn.Sigmoid()(ten_a)[0].numpy())
 
             traj_list.append((ten_s, reward, done, ten_a, ten_n))  # different
 

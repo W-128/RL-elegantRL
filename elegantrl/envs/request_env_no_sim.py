@@ -49,29 +49,17 @@ def t_to_zero():
     t = 0
 
 
-
-def numpy_a_to_action(numpy_a):
-    ten_a = torch.Tensor(numpy_a)
-    softmax_a = nn.Softmax(dim=0)(ten_a)
-    probability_a = list(softmax_a.detach().cpu().numpy())
-    action = [0] * len(probability_a)
-    for index in range(len(probability_a) - 1):
-        action[index] = int(round(probability_a[index] * THRESHOLD, 0))
-    action[-1] = THRESHOLD - sum(action[:-1])
-    return action
-
-
 class RequestEnvNoSim:
 
     def __init__(self):
         # 奖励参数设置
-        self.penalty_scale = 0
-        self.reward_scale = 1
-        self.invalid_action_penalty_scale = 0
+        self.more_provision_penalty_scale = 0
+        self.success_reward_scale = 1
+        self.more_than_threshold_penalty_scale = -0.25
         self.beta = 1
         self.c = -1
-        # action需要归一化转为概率
-        self.action_need_softmax = True
+        # action需要从概率到数量
+        self.action_is_probability = True
         # 状态向量的维数=rtl的级别个数
         # state=(剩余时间为0的请求个数,...,剩余时间为5的请求个数)
         self.state_dim = 6
@@ -81,14 +69,13 @@ class RequestEnvNoSim:
         for i in range(self.state_dim):
             self.active_request_group_by_remaining_time_list.append([])
         self.state_record = []
-        # 动作空间维数 == 状态向量的维数+1
-        # action=(从剩余时间为0的请求中提交的请求个数, 从剩余时间为1的请求中提交的请求个数,...,从剩余时间为5的请求中提交的请求个数,空提交的个数)
-        self.action_dim = self.state_dim + 1
-        # [0,1,...,5,null]
+        # 动作空间维数 == 状态向量的维数
+        # action=(从剩余时间为0的请求中提交的请求个数, 从剩余时间为1的请求中提交的请求个数,...,从剩余时间为5的请求中提交的请求个数)
+        self.action_dim = self.state_dim
+        # [0,1,...,5]
         self.action_list = []
         for i in range(self.action_dim - 1):
             self.action_list.append(str(i))
-        self.action_list.append('null')
         self.success_request_list = []
         self.fail_request_list = []
         self.episode = 0
@@ -110,27 +97,26 @@ class RequestEnvNoSim:
         # self.end_request_result_path = curr_path + '/success_request_list/' + curr_time + '/'
         # make_dir(self.end_request_result_path)
 
-    # # action归一化转为概率再转为数量
-    # def numpy_a_to_action(self, action):
-    #     action = torch.Tensor(action)
-    #     action = nn.Softmax(dim=0)(action)
-    #     action = list(action.detach().cpu().numpy())
-    #     for index in range(len(action) - 1):
-    #         action[index] = int(round(action[index] * self.threshold, 0))
-    #     action[-1] = self.threshold - sum(action[:-1])
-    #     return action
+    def action_probability_to_number(self, probability_action):
+        # number_action=(从剩余时间为0的请求中提交的请求个数, 从剩余时间为1的请求中提交的请求个数,...,从剩余时间为5的请求中提交的请求个数)
+        number_action = [0] * len(probability_action)
+        for index in range(len(probability_action)):
+            number_action[index] = int(
+                round(probability_action[index] * len(self.active_request_group_by_remaining_time_list[index]
+                                                      ), 0))
+        return number_action
 
     # 返回奖励值和下一个状态
     def step(self, action):
-        if self.action_need_softmax:
-            action = numpy_a_to_action(action)
+        if self.action_is_probability:
+            action = self.action_probability_to_number(action)
         # debug
         # print('action: ' + str(action))
         # print('t:' + str(t))
 
-        reward, edited_action = self.get_reward(action)
+        reward = self.get_reward(action)
         # 环境更新
-        done = self.update_env(edited_action)
+        done = self.update_env(action)
 
         # 验证环境正确性
         if done and self.need_evaluate_env_correct:
@@ -144,9 +130,8 @@ class RequestEnvNoSim:
     # 确保action合法
     def update_env(self, action):
         # submit request
-        # action[提交剩余时间为0的请求数量, 提交剩余时间为1的请求数量, ,不提交的数量]
-        # 确保 action 有mask 不会选择队列为空的剩余时间队列
-        for remaining_time in range(self.action_dim - 1):
+        # action=(从剩余时间为0的请求中提交的请求个数, 从剩余时间为1的请求中提交的请求个数,...,从剩余时间为5的请求中提交的请求个数)
+        for remaining_time in range(self.action_dim):
             for j in range(int(action[remaining_time])):
                 # time_stamp = time.time()
                 submit_index = np.random.choice(
@@ -202,43 +187,11 @@ class RequestEnvNoSim:
         return episode_done
 
     def get_reward(self, action):
-        # action[提交剩余时间为0的请求数量, 提交剩余时间为1的请求数量, ,不提交的数量]
+        # action[提交剩余时间为0的请求数量, 提交剩余时间为1的请求数量, 提交剩余时间为N的请求数量]
         self.call_get_reward_times += 1
-        invalid_action_penalty = 0
-        edited_action = list(action)
-        is_valid_action = False
-        # 判断是否是违法动作
-        for index in range(len(action) - 1):
-            if action[index] > len(
-                    self.active_request_group_by_remaining_time_list[index]):
-                is_valid_action = True
-                self.invalid_action_times += 1
-                break
-        # 不可行动作置为最接近invalid_action的合法动作
-        if is_valid_action:
-            for index in range(len(action) - 1):
-                if action[index] > len(
-                        self.active_request_group_by_remaining_time_list[index]
-                ):
-                    edited_action[-1] += action[index] - len(
-                        self.active_request_group_by_remaining_time_list[index]
-                    )
-                    edited_action[index] = len(
-                        self.active_request_group_by_remaining_time_list[index]
-                    )
-            more_submit_sum = edited_action[-1] - action[-1]
-            # 如果remaining_time==0的请求有未执行的 并且需要优化invalid_action
-            if self.invalid_action_optim and edited_action[0] < len(
-                    self.active_request_group_by_remaining_time_list[0]):
-                can_edit_num = min(
-                    more_submit_sum,
-                    (len(self.active_request_group_by_remaining_time_list[0]) -
-                     edited_action[0]))
-                edited_action[-1] -= can_edit_num
-                edited_action[0] += can_edit_num
-                more_submit_sum = edited_action[-1] - action[-1]
-            # 不可行动作惩罚
-            invalid_action_penalty = more_submit_sum / self.threshold
+        more_than_threshold_penalty = 0
+        if sum(action) > self.threshold:
+            more_than_threshold_penalty = sum(action) - self.threshold
 
         # 超供惩罚
         more_provision_penalty = 0
@@ -248,17 +201,17 @@ class RequestEnvNoSim:
 
         # 成功率奖励
         success_reward_list = []
-        for i in range(len(edited_action) - 1):
-            success_reward_list.append(edited_action[i] * np.power(self.beta, i))
+        for i in range(len(action)):
+            success_reward_list.append(action[i] * np.power(self.beta, i))
         success_reward = np.sum(success_reward_list) / self.threshold
         fail_num = 0
-        if edited_action[0] < len(
+        if action[0] < len(
                 self.active_request_group_by_remaining_time_list[0]):
             fail_num = len(self.active_request_group_by_remaining_time_list[0]
-                           ) - edited_action[0]
+                           ) - action[0]
         fail_penalty = self.c * (fail_num / self.threshold)
         success_reward = success_reward + fail_penalty
-        return self.reward_scale * success_reward + self.penalty_scale * more_provision_penalty + self.invalid_action_penalty_scale * invalid_action_penalty, edited_action
+        return self.success_reward_scale * success_reward + self.more_provision_penalty_scale * more_provision_penalty + self.more_than_threshold_penalty_scale * more_than_threshold_penalty
 
     # request_list -> state
     def active_request_group_by_remaining_time_list_to_state(self):
@@ -358,11 +311,16 @@ class RequestEnvNoSim:
     def get_success_request(self):
         return self.success_request_list, WAIT_TIME_INDEX, RTL_INDEX
 
-    def get_submit_request_num_per_second_variance(self):
+    def get_submit_request_num_per_second_variance_and_more_than_threshold_rate(self):
         submit_request_num_per_second_list = [0] * t
         for success_request in self.success_request_list:
             submit_request_num_per_second_list[
                 success_request[ARRIVE_TIME_INDEX] +
                 success_request[WAIT_TIME_INDEX]] += 1
+        more_than_threshold_times = 0
+        for submit_request_num_per_second in submit_request_num_per_second_list:
+            if submit_request_num_per_second > self.threshold:
+                more_than_threshold_times += 1
 
-        return np.var(submit_request_num_per_second_list)
+        return np.var(submit_request_num_per_second_list), 100.0 * more_than_threshold_times / sum(
+            submit_request_num_per_second_list)

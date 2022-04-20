@@ -53,7 +53,7 @@ class EDFConfig:
 
 
 env = RequestEnvNoSim()
-env.action_need_softmax = False
+env.action_is_probability = False
 random_choose_cfg = RandomChooseConfig()
 make_dir(random_choose_cfg.result_path)  # 创建模型路径的文件夹
 agent = RandomChoose(env.action_dim)

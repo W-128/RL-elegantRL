@@ -378,7 +378,7 @@ class ActorPPO(nn.Module):
         self.sqrt_2pi_log = np.log(np.sqrt(2 * np.pi))
 
     def forward(self, state):
-        return self.net(state).tanh()  # action.tanh()
+        return nn.Sigmoid()(self.net(state))  # action.sigmoid()
 
     def get_action(self, state):
         a_avg = self.net(state)
