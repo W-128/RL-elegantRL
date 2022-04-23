@@ -5,7 +5,7 @@ curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = os.path.split(curPath)[0]
 sys.path.append(rootPath)
 
-from elegantrl.envs.request_env_no_sim import RequestEnvNoSim
+from elegantrl.envs.request_env_no_sim_sla_violate import RequestEnvNoSimSLAViolate
 from agent import RandomChoose, EDF, EDFSubmitThreshold
 from train_test import test
 import datetime
@@ -52,11 +52,12 @@ class EDFConfig:
         self.save = True  # 是否保存图片
 
 
-env = RequestEnvNoSim()
+env = RequestEnvNoSimSLAViolate()
 env.action_is_probability = False
+
 random_choose_cfg = RandomChooseConfig()
 make_dir(random_choose_cfg.result_path)  # 创建模型路径的文件夹
-agent = RandomChoose(env.action_dim)
+agent = RandomChoose(env.action_dim, env.N)
 success_request, waiting_time_index, rtl_index = test(random_choose_cfg, env,
                                                       agent)
 # plot_waiting_time_and_require_time(success_request, waiting_time_index,
@@ -65,7 +66,7 @@ success_request, waiting_time_index, rtl_index = test(random_choose_cfg, env,
 print("==========================================================")
 edf_config = EDFConfig()
 make_dir(edf_config.result_path)  # 创建模型路径的文件夹
-agent = EDF(env.action_dim)
+agent = EDF(env.action_dim, env.N)
 success_request, waiting_time_index, rtl_index = test(edf_config, env, agent)
 # plot_waiting_time_and_require_time(success_request, waiting_time_index,
 #                                    rtl_index, edf_config)
@@ -73,7 +74,7 @@ success_request, waiting_time_index, rtl_index = test(edf_config, env, agent)
 print("==========================================================")
 edf_submit_threshold_config = EDFSubmitThresholdConfig()
 make_dir(edf_submit_threshold_config.result_path)  # 创建模型路径的文件夹
-agent = EDFSubmitThreshold(env.action_dim)
+agent = EDFSubmitThreshold(env.action_dim, env.N)
 success_request, waiting_time_index, rtl_index = test(
     edf_submit_threshold_config, env, agent)
 # plot_waiting_time_and_require_time(success_request, waiting_time_index,

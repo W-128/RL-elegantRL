@@ -1,6 +1,12 @@
 # Load the Dataset and grab a subset
 # In this python code we grab the dataset and scale a subset of dataset to use as
 # sample workload in our application.
+import os
+import sys
+
+curPath = os.path.abspath(os.path.dirname(__file__))
+rootPath = os.path.split(curPath)[0]
+sys.path.append(rootPath)
 
 import pandas as pd
 import seaborn as sns
@@ -15,7 +21,6 @@ df = df.groupby('period').sum()
 # sub_df = df['1998-06-30 08:00:01':'1998-07-01 08:00:00']
 sub_df = df['1998-06-30 08:00:01':'1998-06-30 18:00:00']
 # sub_df = df['1998-06-30 08:00:01':'1998-07-10 18:00:00']
-
 
 sns.set()
 
