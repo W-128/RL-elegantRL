@@ -10,7 +10,7 @@ sys.path.append(os.path.split(rootPath)[0])
 from elegantrl.train.run import *
 from elegantrl.agents import *
 from elegantrl.train.config import Arguments
-from elegantrl.envs.request_env_no_sim import RequestEnvNoSim
+from elegantrl.envs.request_env_no_sim_sla_violate import RequestEnvNoSimSLAViolate
 from elegantrl.train.evaluator import \
     get_episode_return_and_step_and_success_rate_and_more_provision_and_variance_and_more_than_threshold_rate
 """custom env"""
@@ -19,9 +19,9 @@ from elegantrl.train.evaluator import \
 class RequestEnvNoSimWrapper():
 
     def __init__(self, more_than_threshold_penalty_scale=-4) -> None:
-        self.env = RequestEnvNoSim()
+        self.env = RequestEnvNoSimSLAViolate()
         self.env_num = 1
-        self.env_name = 'RequestEnvNoSim'
+        self.env_name = 'RequestEnvNoSimSLAViolate'
         self.max_step = len(
             self.env.new_arrive_request_in_dic
         ) + self.env.state_dim  # 每个episode的最大步数（就是从 env.reset() 开始到 env.step()返回 done=True 的步数上限）
@@ -61,7 +61,7 @@ def evaluate_agent():
     agent = AgentPPO
     args = Arguments(agent, env=env)
     act = agent(args.net_dim, env.state_dim, env.action_dim).act
-    actor_path = 'RequestEnvNoSim_PPO_0/actor_00974997_00185.450.pth'
+    actor_path = './RequestEnvNoSim_PPO_0/actor_00996093_00194.650.pth'
     act.load_state_dict(
         torch.load(actor_path, map_location=lambda storage, loc: storage))
 

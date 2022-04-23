@@ -59,7 +59,7 @@ class RequestEnvNoSimSLAViolate:
         self.c = -1
         # action需要从概率到数量
         self.action_is_probability = True
-        self.N = 5
+        self.N = 10
         # 状态向量的维数=rtl的级别个数
         # state=(剩余时间为-5的请求个数,...,剩余时间为-1的请求个数,剩余时间为0的请求个数,...,剩余时间为5的请求个数)
         self.state_dim = 2 * self.N + 1
@@ -141,7 +141,7 @@ class RequestEnvNoSimSLAViolate:
                 # time_stamp = time.time()
                 submit_index = np.random.choice(
                     self.active_request_group_by_remaining_time_list[index].
-                    __len__())
+                        __len__())
                 end_request = list(
                     self.active_request_group_by_remaining_time_list[index]
                     [submit_index])
@@ -158,7 +158,7 @@ class RequestEnvNoSimSLAViolate:
                 # time_stamp = time.time()
                 submit_index = np.random.choice(
                     self.active_request_group_by_remaining_time_list[index].
-                    __len__())
+                        __len__())
                 end_request = list(
                     self.active_request_group_by_remaining_time_list[index]
                     [submit_index])
@@ -172,25 +172,23 @@ class RequestEnvNoSimSLAViolate:
 
         # remaining_time==0且还留在active_request_group_by_remaining_time_list中的请求此时违约
         for active_request in self.active_request_group_by_remaining_time_list[
-                self.N]:
+            self.N]:
             self.violate_request_list.append(list(active_request))
 
         # remaining_time==-N且还留在active_request_group_by_remaining_time_list中的请求此时失败
         for active_request in self.active_request_group_by_remaining_time_list[
-                0]:
+            0]:
             self.fail_request_list.append(list(active_request))
         self.active_request_group_by_remaining_time_list[0] = []
 
         # active_request_group_by_remaining_time_list 剩余时间要推移
         for i in range(
-                1, self.active_request_group_by_remaining_time_list.__len__()):
-            self.active_request_group_by_remaining_time_list[i - 1] = []
-            for active_request in self.active_request_group_by_remaining_time_list[
-                    i]:
-                active_request[REMAINING_TIME_INDEX] = active_request[
-                    REMAINING_TIME_INDEX] - 1
+                1, len(self.active_request_group_by_remaining_time_list)):
+            for active_request in self.active_request_group_by_remaining_time_list[i]:
+                active_request[REMAINING_TIME_INDEX] = active_request[REMAINING_TIME_INDEX] - 1
                 self.active_request_group_by_remaining_time_list[i - 1].append(
                     list(active_request))
+            self.active_request_group_by_remaining_time_list[i] = []
 
         episode_done = False
         # 与真实环境交互的话这里需要更改
@@ -206,8 +204,6 @@ class RequestEnvNoSimSLAViolate:
         for i in range(len(self.state_record)):
             if self.state_record[i] != 0:
                 remaining_request_is_done = False
-        if t == 590:
-            print('1')
         if t > np.max(list(self.arriveTime_request_dic.keys())
                       ) and remaining_request_is_done:
             episode_done = True
@@ -221,7 +217,7 @@ class RequestEnvNoSimSLAViolate:
         more_than_threshold_penalty = 0
         if sum(action) > self.threshold:
             more_than_threshold_penalty = (
-                sum(action) - self.threshold) / float(self.threshold)
+                                                  sum(action) - self.threshold) / float(self.threshold)
         # 超供惩罚
         more_provision_penalty = 0
         for index in range(1, self.action_dim - 1):
@@ -236,18 +232,18 @@ class RequestEnvNoSimSLAViolate:
         if action[0] < len(
                 self.active_request_group_by_remaining_time_list[0]):
             fail_num = (
-                len(self.active_request_group_by_remaining_time_list[0]) -
-                action[0]) / float(self.threshold)
+                               len(self.active_request_group_by_remaining_time_list[0]) -
+                               action[0]) / float(self.threshold)
 
         # 违约
         violate_num = 0
         if action[self.N] < len(
                 self.active_request_group_by_remaining_time_list[self.N]):
             violate_num = (
-                len(self.active_request_group_by_remaining_time_list[self.N]) -
-                action[self.N]) / float(self.threshold)
+                                  len(self.active_request_group_by_remaining_time_list[self.N]) -
+                                  action[self.N]) / float(self.threshold)
         return self.success_reward_scale * (
-            success_num - fail_num
+                success_num - fail_num
         ) + self.more_provision_penalty_scale * more_provision_penalty + self.violate_penalty_scale * violate_num + self.more_than_threshold_penalty_scale * more_than_threshold_penalty
 
     # request_list -> state
@@ -364,7 +360,7 @@ class RequestEnvNoSimSLAViolate:
 
         return np.var(submit_request_num_per_second_list
                       ), 100.0 * more_than_threshold_times / sum(
-                          submit_request_num_per_second_list)
+            submit_request_num_per_second_list)
 
     def get_violate_rate(self):
         return float(len(self.violate_request_list)) / len(
