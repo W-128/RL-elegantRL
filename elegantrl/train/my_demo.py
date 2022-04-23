@@ -11,8 +11,6 @@ from elegantrl.train.run import *
 from elegantrl.agents import *
 from elegantrl.train.config import Arguments
 from elegantrl.envs.request_env_no_sim import RequestEnvNoSim
-from elegantrl.train.evaluator import \
-    get_episode_return_and_step_and_success_rate_and_more_provision_and_variance_and_more_than_threshold_rate
 """custom env"""
 
 
@@ -71,8 +69,8 @@ def demo_continuous_action_on_policy():
     print("gpu_id", gpu_id)
     print("env_name", env.env_name)
     args = Arguments(agent, env=env)
-    args.gamma = 0.98
-    args.env.target_return = 180  # set target_reward manually for env 'Pendulum-v0'
+    args.gamma = 0.8
+    args.env.target_return = 200  # set target_reward manually for env 'Pendulum-v0'
     args.learner_gpus = gpu_id
     args.random_seed += gpu_id
 
