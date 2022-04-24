@@ -11,6 +11,7 @@ from elegantrl.train.run import *
 from elegantrl.agents import *
 from elegantrl.train.config import Arguments
 from elegantrl.envs.request_env_no_sim_sla_violate import RequestEnvNoSimSLAViolate
+
 """custom env"""
 
 
@@ -25,7 +26,7 @@ class RequestEnvNoSimWrapper():
         ) + self.env.state_dim  # 每个episode的最大步数（就是从 env.reset() 开始到 env.step()返回 done=True 的步数上限）
         self.state_dim = self.env.state_dim  # feature number of state
         self.action_dim = self.env.action_dim  # feature number of action
-        self.target_return = 150
+        self.target_return = 231
         self.if_discrete = False
         self.env.more_than_threshold_penalty_scale = more_than_threshold_penalty_scale
 
@@ -48,13 +49,20 @@ class RequestEnvNoSimWrapper():
     def get_more_provision_sum(self):
         return self.env.get_more_provision_sum()
 
-    def get_submit_request_num_per_second_variance_and_more_than_threshold_rate(
-            self):
-        return self.env.get_submit_request_num_per_second_variance_and_more_than_threshold_rate(
-        )
+    def get_more_than_threshold_rate(self):
+        return self.env.get_more_than_threshold_rate()
 
+    def get_submit_request_num_per_second_variance(self):
+        return self.env.get_submit_request_num_per_second_variance()
 
-"""demo"""
+    def get_sla_violate_rate(self):
+        return self.env.get_sla_violate_rate()
+
+    def print_wait_time_avg(self):
+        return self.env.print_wait_time_avg()
+
+    def get_more_provision_rate(self):
+        return self.env.get_more_provision_rate()
 
 
 def demo_continuous_action_on_policy():
@@ -70,7 +78,7 @@ def demo_continuous_action_on_policy():
     print("env_name", env.env_name)
     args = Arguments(agent, env=env)
     args.gamma = 0.9
-    args.env.target_return = 150  # set target_reward manually for env 'Pendulum-v0'
+    args.env.target_return = 231  # set target_reward manually for env 'Pendulum-v0'
     args.learner_gpus = gpu_id
     args.random_seed += gpu_id
 

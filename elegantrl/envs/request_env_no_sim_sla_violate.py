@@ -17,7 +17,7 @@ import torch
 # t=1000ms
 TIME_UNIT = 1
 TIME_UNIT_IN_ON_SECOND = int(1 / TIME_UNIT)
-THRESHOLD = int(40 / TIME_UNIT_IN_ON_SECOND)
+THRESHOLD = int(60 / TIME_UNIT_IN_ON_SECOND)
 # 实时用的话，这个地方无法事先写好，只能每秒来append
 # 现在先 直接从文件读取
 
@@ -328,26 +328,31 @@ class RequestEnvNoSimSLAViolate:
         return not_avail_actions
 
     def get_more_provision_rate(self):
-        more_provision_list = []
+        # # mean((rtl-waitTime)/rtl)
+        # more_provision_list = []
+        # for success_request in self.no_violate_success_request_list:
+        #     more_provision_list.append(
+        #         (success_request[RTL_INDEX] - success_request[WAIT_TIME_INDEX])
+        #         / success_request[RTL_INDEX])
+        # return np.mean(more_provision_list)
+
+        more_provision_request_num = 0
         for success_request in self.no_violate_success_request_list:
-            more_provision_list.append(
-                (success_request[RTL_INDEX] - success_request[WAIT_TIME_INDEX])
-                / success_request[RTL_INDEX])
-        return 100.0 * np.sum(more_provision_list) / len(
-            self.no_violate_success_request_list)
+            if success_request[RTL_INDEX] > success_request[WAIT_TIME_INDEX]:
+                more_provision_request_num += 1
+        return float(more_provision_request_num) / len(self.new_arrive_request_in_dic)
 
     def get_more_provision_sum(self):
         more_provision_list = []
         for success_request in self.no_violate_success_request_list:
-            more_provision_list.append(success_request[RTL_INDEX] -
-                                       success_request[WAIT_TIME_INDEX])
-        return np.sum(more_provision_list)
+            more_provision_list.append(float(success_request[RTL_INDEX] -
+                                             success_request[WAIT_TIME_INDEX]) / success_request[RTL_INDEX])
+        return np.mean(more_provision_list)
 
     def get_success_request(self):
         return self.no_violate_success_request_list, WAIT_TIME_INDEX, RTL_INDEX
 
-    def get_submit_request_num_per_second_variance_and_more_than_threshold_rate(
-            self):
+    def get_submit_request_num_per_second_variance(self):
         submit_request_num_per_second_list = [0] * t
         for success_request in self.no_violate_success_request_list:
             submit_request_num_per_second_list[
@@ -358,11 +363,22 @@ class RequestEnvNoSimSLAViolate:
             if submit_request_num_per_second > self.threshold:
                 more_than_threshold_times += 1
 
-        return np.var(submit_request_num_per_second_list
-                      ), 100.0 * more_than_threshold_times / sum(
-            submit_request_num_per_second_list)
+        return np.var(submit_request_num_per_second_list)
 
-    def get_violate_rate(self):
+    def get_more_than_threshold_rate(self):
+        submit_request_num_per_second_list = [0] * t
+        for success_request in self.no_violate_success_request_list:
+            submit_request_num_per_second_list[
+                success_request[ARRIVE_TIME_INDEX] +
+                success_request[WAIT_TIME_INDEX]] += 1
+        more_than_threshold_times = 0
+        for submit_request_num_per_second in submit_request_num_per_second_list:
+            if submit_request_num_per_second > self.threshold:
+                more_than_threshold_times += 1
+
+        return float(more_than_threshold_times) / sum(submit_request_num_per_second_list)
+
+    def get_sla_violate_rate(self):
         return float(len(self.violate_request_list)) / len(
             self.new_arrive_request_in_dic)
 
@@ -371,3 +387,15 @@ class RequestEnvNoSimSLAViolate:
         for active_request_group_by_remaining_time in self.active_request_group_by_remaining_time_list:
             state.append(len(active_request_group_by_remaining_time))
         return state
+
+    def print_wait_time_avg(self):
+        success_request_rtl_dic = {}
+        for success_request in self.no_violate_success_request_list:
+            if success_request[RTL_INDEX] in success_request_rtl_dic:
+                success_request_rtl_dic[success_request[RTL_INDEX]].append(success_request)
+            else:
+                success_request_rtl_dic[success_request[RTL_INDEX]] = []
+        for rtl in success_request_rtl_dic:
+            wait_time_arr = np.array(np.array(success_request_rtl_dic[rtl])[:, WAIT_TIME_INDEX], dtype=int)
+            wait_time_avg = np.average(wait_time_arr)
+            print('rtl:' + str(rtl) + '等待时间平均值:{:.1f}'.format(wait_time_avg))
