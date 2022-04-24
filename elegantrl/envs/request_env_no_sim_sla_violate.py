@@ -51,9 +51,10 @@ class RequestEnvNoSimSLAViolate:
 
     def __init__(self):
         # 奖励参数设置
-        self.violate_penalty_scale = -0.5
         self.more_provision_penalty_scale = 0
-        self.success_reward_scale = 1
+        self.no_violate_success_reward_scale = 1
+        self.violate_success_reward_scale = 0.5
+        self.fail_penalty_scale = -1
         self.more_than_threshold_penalty_scale = -4
         self.beta = 1
         self.c = -1
@@ -216,8 +217,7 @@ class RequestEnvNoSimSLAViolate:
         # 超阈值惩罚
         more_than_threshold_penalty = 0
         if sum(action) > self.threshold:
-            more_than_threshold_penalty = (
-                                                  sum(action) - self.threshold) / float(self.threshold)
+            more_than_threshold_penalty = (sum(action) - self.threshold) / float(self.threshold)
         # 超供惩罚
         more_provision_penalty = 0
         for index in range(1, self.action_dim - 1):
@@ -225,26 +225,20 @@ class RequestEnvNoSimSLAViolate:
         more_provision_penalty = more_provision_penalty / (self.threshold *
                                                            self.state_dim)
 
-        # 成功率奖励
-        success_num = min(sum(action), self.threshold) / float(self.threshold)
+        # 不违约成功
+        no_violate_success_num = min(sum(action[self.N:]), self.threshold) / float(self.threshold)
+        # 违约成功
+        violate_success_num = min(sum(action[:self.N]), self.threshold) / float(self.threshold)
         # 失败数量
         fail_num = 0
-        if action[0] < len(
-                self.active_request_group_by_remaining_time_list[0]):
-            fail_num = (
-                               len(self.active_request_group_by_remaining_time_list[0]) -
-                               action[0]) / float(self.threshold)
+        if action[0] < len(self.active_request_group_by_remaining_time_list[0]):
+            fail_num = (len(self.active_request_group_by_remaining_time_list[0]) - action[0]) / float(self.threshold)
+        return self.no_violate_success_reward_scale * no_violate_success_num \
+               + self.violate_success_reward_scale * violate_success_num \
+               + self.fail_penalty_scale * fail_num \
+               + self.more_provision_penalty_scale * violate_success_num \
+               + self.more_than_threshold_penalty_scale * more_than_threshold_penalty
 
-        # 违约
-        violate_num = 0
-        if action[self.N] < len(
-                self.active_request_group_by_remaining_time_list[self.N]):
-            violate_num = (
-                                  len(self.active_request_group_by_remaining_time_list[self.N]) -
-                                  action[self.N]) / float(self.threshold)
-        return self.success_reward_scale * (
-                success_num - fail_num
-        ) + self.more_provision_penalty_scale * more_provision_penalty + self.violate_penalty_scale * violate_num + self.more_than_threshold_penalty_scale * more_than_threshold_penalty
 
     # request_list -> state
     def active_request_group_by_remaining_time_list_to_state(self):
