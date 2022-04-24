@@ -204,8 +204,6 @@ class RequestEnvNoSimSLAViolate:
         for i in range(len(self.state_record)):
             if self.state_record[i] != 0:
                 remaining_request_is_done = False
-        if t == 590:
-            print('1')
         if t > np.max(list(self.arriveTime_request_dic.keys())
                       ) and remaining_request_is_done:
             episode_done = True

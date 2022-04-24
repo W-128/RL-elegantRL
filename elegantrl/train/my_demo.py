@@ -10,22 +10,22 @@ sys.path.append(os.path.split(rootPath)[0])
 from elegantrl.train.run import *
 from elegantrl.agents import *
 from elegantrl.train.config import Arguments
-from elegantrl.envs.request_env_no_sim import RequestEnvNoSim
+from elegantrl.envs.request_env_no_sim_sla_violate import RequestEnvNoSimSLAViolate
 """custom env"""
 
 
 class RequestEnvNoSimWrapper():
 
     def __init__(self, more_than_threshold_penalty_scale=-3) -> None:
-        self.env = RequestEnvNoSim()
+        self.env = RequestEnvNoSimSLAViolate()
         self.env_num = 1
-        self.env_name = 'RequestEnvNoSim'
+        self.env_name = 'RequestEnvNoSimSLAViolate'
         self.max_step = len(
             self.env.new_arrive_request_in_dic
         ) + self.env.state_dim  # 每个episode的最大步数（就是从 env.reset() 开始到 env.step()返回 done=True 的步数上限）
         self.state_dim = self.env.state_dim  # feature number of state
         self.action_dim = self.env.action_dim  # feature number of action
-        self.target_return = 270
+        self.target_return = 870
         self.if_discrete = False
         self.env.more_than_threshold_penalty_scale = more_than_threshold_penalty_scale
 
@@ -69,8 +69,8 @@ def demo_continuous_action_on_policy():
     print("gpu_id", gpu_id)
     print("env_name", env.env_name)
     args = Arguments(agent, env=env)
-    args.gamma = 0.8
-    args.env.target_return = 200  # set target_reward manually for env 'Pendulum-v0'
+    args.gamma = 0.9
+    args.env.target_return = 870  # set target_reward manually for env 'Pendulum-v0'
     args.learner_gpus = gpu_id
     args.random_seed += gpu_id
 
