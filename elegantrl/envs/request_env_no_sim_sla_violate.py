@@ -59,7 +59,7 @@ class RequestEnvNoSimSLAViolate:
         self.c = -1
         # action需要从概率到数量
         self.action_is_probability = True
-        self.N = 10
+        self.N = 5
         # 状态向量的维数=rtl的级别个数
         # state=(剩余时间为-5的请求个数,...,剩余时间为-1的请求个数,剩余时间为0的请求个数,...,剩余时间为5的请求个数)
         self.state_dim = 2 * self.N + 1

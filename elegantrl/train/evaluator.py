@@ -227,7 +227,7 @@ def get_episode_s_tensor_list_and_a_tensor_list(env,
 
 def get_episode_return_and_step_and_success_rate_and_more_provision_and_variance_and_more_than_threshold_rate(
         env,
-        act) -> (float, int, float, float, float):  # [ElegantRL.2022.01.01]
+        act) -> (float, int, float, float, float,float):  # [ElegantRL.2022.01.01]
     max_step = env.max_step
     if_discrete = env.if_discrete
     device = next(
@@ -253,7 +253,8 @@ def get_episode_return_and_step_and_success_rate_and_more_provision_and_variance
     episode_success_rate = env.get_success_rate() * 100
     episode_more_provision_sum = env.get_more_provision_sum()
     episode_variance, episode_more_than_threshold_rate = env.get_submit_request_num_per_second_variance_and_more_than_threshold_rate()
-    return episode_return, episode_step, episode_success_rate, episode_more_provision_sum, episode_variance, episode_more_than_threshold_rate
+    episode_sla_violate = env.get_violate_rate()
+    return episode_return, episode_step, episode_success_rate, episode_more_provision_sum, episode_variance, episode_more_than_threshold_rate,episode_sla_violate
 
 
 def save_learning_curve(
