@@ -88,7 +88,7 @@ class Evaluator:  # [ElegantRL.2022.01.01]
                 """打印现在的无超阈值惩罚奖励以及各个评估指标"""
                 print(
                     "成功率：{:.1f}%, 违约率：{:.1f}%, 提交量大于阈值的概率：{:.5f}%, 超供率：{:.1f}, 超供程度：{:.1f}, 方差：{:.1f}"
-                    .format(
+                        .format(
                         self.eval_env.get_success_rate() * 100,
                         self.eval_env.get_sla_violate_rate() * 100,
                         self.eval_env.get_more_than_threshold_rate() * 100,
@@ -179,7 +179,7 @@ def get_episode_return_and_step(env,
         if if_discrete:
             a_tensor = a_tensor.argmax(dim=1)
         action = (a_tensor.detach().cpu().numpy()[0]
-                  )  # not need detach(), because using torch.no_grad() outside
+        )  # not need detach(), because using torch.no_grad() outside
         state, reward, done, _ = env.step(action)
         episode_return += reward
         if done:
@@ -224,7 +224,7 @@ def get_episode_s_tensor_list_and_a_tensor_list(
         if if_discrete:
             a_tensor = a_tensor.argmax(dim=1)
         action = (a_tensor.detach().cpu().numpy()[0]
-                  )  # not need detach(), because using torch.no_grad() outside
+        )  # not need detach(), because using torch.no_grad() outside
         s_a.append(action)
         state, reward, done, _ = env.step(action)
         episode_return += reward
@@ -237,7 +237,7 @@ def get_episode_s_tensor_list_and_a_tensor_list(
 
 
 def get_episode_return_and_step_and_success_rate_and_more_provision_and_variance_and_more_than_threshold_rate(
-    env, act
+        env, act
 ) -> (float, int, float, float, float, float, float):  # [ElegantRL.2022.01.01]
     max_step = env.max_step
     if_discrete = env.if_discrete
@@ -254,7 +254,7 @@ def get_episode_return_and_step_and_success_rate_and_more_provision_and_variance
         if if_discrete:
             a_tensor = a_tensor.argmax(dim=1)
         action = (a_tensor.detach().cpu().numpy()[0]
-                  )  # not need detach(), because using torch.no_grad() outside
+        )  # not need detach(), because using torch.no_grad() outside
         state, reward, done, _ = env.step(action)
         episode_return += reward
         if done:
@@ -270,11 +270,12 @@ def get_episode_return_and_step_and_success_rate_and_more_provision_and_variance
     return episode_return, episode_step, episode_success_rate, episode_more_provision_sum, episode_more_provision_rate, episode_variance, episode_more_than_threshold_rate, episode_sla_violate
 
 
+
 def save_learning_curve(
-    recorder=None,
-    cwd=".",
-    save_title="learning curve",
-    fig_name="plot_learning_curve.jpg",
+        recorder=None,
+        cwd=".",
+        save_title="learning curve",
+        fig_name="plot_learning_curve.jpg",
 ):
     if recorder is None:
         recorder = np.load(f"{cwd}/recorder.npy")
@@ -381,7 +382,7 @@ def demo_evaluator_actor_pth():
 
     actor_path = "./LunarLanderContinuous-v2_PPO_1/actor.pth"
     eval_times = 4
-    net_dim = 2**7
+    net_dim = 2 ** 7
     """init"""
     env = build_env(env_func=env_func, env_args=env_args)
     act = agent(net_dim, env.state_dim, env.action_dim, gpu_id=gpu_id).act
@@ -472,7 +473,7 @@ def run():
             "action_dim": 2,
             "if_discrete": False,
             "target_return": 200,
-            "eval_times": 2**4,
+            "eval_times": 2 ** 4,
             "id": "LunarLanderContinuous-v2",
         },
         {
@@ -483,7 +484,7 @@ def run():
             "action_dim": 4,
             "if_discrete": False,
             "target_return": 300,
-            "eval_times": 2**3,
+            "eval_times": 2 ** 3,
             "id": "BipedalWalker-v3",
         },
     ][flag_id]

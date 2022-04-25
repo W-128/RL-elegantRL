@@ -22,7 +22,7 @@ THRESHOLD = int(60 / TIME_UNIT_IN_ON_SECOND)
 # 现在先 直接从文件读取
 
 # request=[request_id, arrive_time, rtl, remaining_time]
-# success_request_list[request_id, arrive_time, rtl, wait_time]
+# no_violate_success_request_list[request_id, arrive_time, rtl, wait_time]
 REQUEST_ID_INDEX = 0
 ARRIVE_TIME_INDEX = 1
 RTL_INDEX = 2
@@ -97,7 +97,7 @@ class RequestEnvNoSimSLAViolate:
         '''
         self.new_arrive_request_in_dic, self.arriveTime_request_dic = get_arrive_time_request_dic(
             ARRIVE_TIME_INDEX)
-        # self.end_request_result_path = curr_path + '/success_request_list/' + curr_time + '/'
+        # self.end_request_result_path = curr_path + '/no_violate_success_request_list/' + curr_time + '/'
         # make_dir(self.end_request_result_path)
 
     def action_probability_to_number(self, probability_action):
@@ -239,7 +239,6 @@ class RequestEnvNoSimSLAViolate:
                + self.more_provision_penalty_scale * violate_success_num \
                + self.more_than_threshold_penalty_scale * more_than_threshold_penalty
 
-
     # request_list -> state
     def active_request_group_by_remaining_time_list_to_state(self):
         state = []
@@ -269,12 +268,12 @@ class RequestEnvNoSimSLAViolate:
             self.violate_success_request_list)) / float(all_request_num)
 
     # def save_success_request(self):
-    #     # success_request_list[request_id, arrive_time, rtl, wait_time]
+    #     # no_violate_success_request_list[request_id, arrive_time, rtl, wait_time]
     #     headers = ['request_id', 'arrive_time', 'rtl', 'wait_time']
-    #     with open(self.end_request_result_path + 'success_request_list' + str(self.episode) + '.csv', 'w', newline='')as f:
+    #     with open(self.end_request_result_path + 'no_violate_success_request_list' + str(self.episode) + '.csv', 'w', newline='')as f:
     #         f_csv = csv.writer(f)
     #         f_csv.writerow(headers)
-    #         f_csv.writerows(self.success_request_list)
+    #         f_csv.writerows(self.no_violate_success_request_list)
 
     # 现在用t来表示，真实环境中收集[t-1,t)到来的请求直接给出
     def get_new_arrive_request_list(self):
@@ -348,7 +347,7 @@ class RequestEnvNoSimSLAViolate:
 
     def get_submit_request_num_per_second_variance(self):
         submit_request_num_per_second_list = [0] * t
-        for success_request in self.no_violate_success_request_list:
+        for success_request in self.no_violate_success_request_list + self.violate_success_request_list:
             submit_request_num_per_second_list[
                 success_request[ARRIVE_TIME_INDEX] +
                 success_request[WAIT_TIME_INDEX]] += 1
@@ -384,7 +383,7 @@ class RequestEnvNoSimSLAViolate:
 
     def print_wait_time_avg(self):
         success_request_rtl_dic = {}
-        for success_request in self.no_violate_success_request_list:
+        for success_request in self.no_violate_success_request_list + self.violate_success_request_list:
             if success_request[RTL_INDEX] in success_request_rtl_dic:
                 success_request_rtl_dic[success_request[RTL_INDEX]].append(success_request)
             else:

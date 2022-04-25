@@ -65,6 +65,8 @@ class RequestEnvNoSimWrapper():
     def get_more_provision_rate(self):
         return self.env.get_more_provision_rate()
 
+    def get_violate_rate(self):
+        return self.env.get_violate_rate()
 
 def evaluate_agent():
     env = RequestEnvNoSimWrapper(more_than_threshold_penalty_scale=0)
