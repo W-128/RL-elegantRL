@@ -25,10 +25,13 @@ class Evaluator:  # [ElegantRL.2022.01.01]
         self.used_time = 0
         self.total_step = 0
         self.start_time = time.time()
-        print(f"{'#' * 80}\n"
-              f"{'ID':<3}{'Step':>8}{'maxR':>8} |"
-              f"{'avgR':>8}{'stdR':>7}{'avgS':>7}{'stdS':>6} |"
-              f"{'expR':>8}{'objC':>7}{'etc.':>7}")
+        with open('./result.txt', 'a+') as f:
+            print(
+                f"{'#' * 80}\n"
+                f"{'ID':<3}{'Step':>8}{'maxR':>8} |"
+                f"{'avgR':>8}{'stdR':>7}{'avgS':>7}{'stdS':>6} |"
+                f"{'expR':>8}{'objC':>7}{'etc.':>7}",
+                file=f)
 
     def evaluate_save_and_plot(self, act, steps, r_exp,
                                log_tuple) -> (bool, bool):  # 2021-09-09
@@ -81,19 +84,21 @@ class Evaluator:  # [ElegantRL.2022.01.01]
                 )
                 torch.save(act.state_dict(),
                            act_path)  # save policy network in *.pth
-
-                print(
-                    f"{self.agent_id:<3}{self.total_step:8.2e}{self.r_max:8.2f} |"
-                )  # save policy and print
-                """打印现在的无超阈值惩罚奖励以及各个评估指标"""
-                print(
-                    "成功率：{:.1f}%, 提交量大于阈值的概率：{:.5f}%, 超供率：{:.1f}%, 超供程度：{:.1f}%, 方差：{:.1f}"
+                with open('./result.txt', 'a+') as f:
+                    print(
+                        f"{self.agent_id:<3}{self.total_step:8.2e}{self.r_max:8.2f} |",
+                        file=f)  # save policy and print
+                    """打印现在的无超阈值惩罚奖励以及各个评估指标"""
+                    print(
+                        "成功率：{:.1f}%, 提交量大于阈值的概率：{:.5f}%, 超供率：{:.1f}%, 超供程度：{:.1f}%, 方差：{:.1f}"
                         .format(
-                        self.eval_env.get_success_rate() * 100,
-                        self.eval_env.get_more_than_threshold_rate() * 100,
-                        self.eval_env.get_more_provision_rate() * 100,
-                        self.eval_env.get_more_provision_sum() * 100,
-                        self.eval_env.get_submit_request_num_per_second_variance()))
+                            self.eval_env.get_success_rate() * 100,
+                            self.eval_env.get_more_than_threshold_rate() * 100,
+                            self.eval_env.get_more_provision_rate() * 100,
+                            self.eval_env.get_more_provision_sum() * 100,
+                            self.eval_env.
+                            get_submit_request_num_per_second_variance()),
+                        file=f)
             """record the training information"""
             self.recorder.append((self.total_step, r_avg, r_std, r_exp,
                                   *log_tuple))  # update recorder
@@ -109,11 +114,12 @@ class Evaluator:  # [ElegantRL.2022.01.01]
                     f"{self.agent_id:<3}{self.total_step:8.2e}{self.target_return:8.2f} |"
                     f"{r_avg:8.2f}{r_std:7.1f}{s_avg:7.0f}{s_std:6.0f} |"
                     f"{self.used_time:>8}  ########")
-
-            print(
-                f"{self.agent_id:<3}{self.total_step:8.2e}{self.r_max:8.2f} |"
-                f"{r_avg:8.2f}{r_std:7.1f}{s_avg:7.0f}{s_std:6.0f} |"
-                f"{r_exp:8.2f}{''.join(f'{n:7.2f}' for n in log_tuple)}")
+            with open('./result.txt', 'a+') as f:
+                print(
+                    f"{self.agent_id:<3}{self.total_step:8.2e}{self.r_max:8.2f} |"
+                    f"{r_avg:8.2f}{r_std:7.1f}{s_avg:7.0f}{s_std:6.0f} |"
+                    f"{r_exp:8.2f}{''.join(f'{n:7.2f}' for n in log_tuple)}",
+                    file=f)
 
             if hasattr(self.eval_env, "curriculum_learning_for_evaluator"):
                 self.eval_env.curriculum_learning_for_evaluator(r_avg)
@@ -177,7 +183,7 @@ def get_episode_return_and_step(env,
         if if_discrete:
             a_tensor = a_tensor.argmax(dim=1)
         action = (a_tensor.detach().cpu().numpy()[0]
-        )  # not need detach(), because using torch.no_grad() outside
+                  )  # not need detach(), because using torch.no_grad() outside
         state, reward, done, _ = env.step(action)
         episode_return += reward
         if done:
@@ -222,7 +228,7 @@ def get_episode_s_tensor_list_and_a_tensor_list(
         if if_discrete:
             a_tensor = a_tensor.argmax(dim=1)
         action = (a_tensor.detach().cpu().numpy()[0]
-        )  # not need detach(), because using torch.no_grad() outside
+                  )  # not need detach(), because using torch.no_grad() outside
         s_a.append(action)
         state, reward, done, _ = env.step(action)
         episode_return += reward
@@ -235,7 +241,7 @@ def get_episode_s_tensor_list_and_a_tensor_list(
 
 
 def get_episode_return_and_step_and_success_rate_and_more_provision_and_variance_and_more_than_threshold_rate(
-        env, act
+    env, act
 ) -> (float, int, float, float, float, float, float):  # [ElegantRL.2022.01.01]
     max_step = env.max_step
     if_discrete = env.if_discrete
@@ -252,7 +258,7 @@ def get_episode_return_and_step_and_success_rate_and_more_provision_and_variance
         if if_discrete:
             a_tensor = a_tensor.argmax(dim=1)
         action = (a_tensor.detach().cpu().numpy()[0]
-        )  # not need detach(), because using torch.no_grad() outside
+                  )  # not need detach(), because using torch.no_grad() outside
         state, reward, done, _ = env.step(action)
         episode_return += reward
         if done:
@@ -268,10 +274,10 @@ def get_episode_return_and_step_and_success_rate_and_more_provision_and_variance
 
 
 def save_learning_curve(
-        recorder=None,
-        cwd=".",
-        save_title="learning curve",
-        fig_name="plot_learning_curve.jpg",
+    recorder=None,
+    cwd=".",
+    save_title="learning curve",
+    fig_name="plot_learning_curve.jpg",
 ):
     if recorder is None:
         recorder = np.load(f"{cwd}/recorder.npy")
@@ -378,7 +384,7 @@ def demo_evaluator_actor_pth():
 
     actor_path = "./LunarLanderContinuous-v2_PPO_1/actor.pth"
     eval_times = 4
-    net_dim = 2 ** 7
+    net_dim = 2**7
     """init"""
     env = build_env(env_func=env_func, env_args=env_args)
     act = agent(net_dim, env.state_dim, env.action_dim, gpu_id=gpu_id).act
@@ -469,7 +475,7 @@ def run():
             "action_dim": 2,
             "if_discrete": False,
             "target_return": 200,
-            "eval_times": 2 ** 4,
+            "eval_times": 2**4,
             "id": "LunarLanderContinuous-v2",
         },
         {
@@ -480,7 +486,7 @@ def run():
             "action_dim": 4,
             "if_discrete": False,
             "target_return": 300,
-            "eval_times": 2 ** 3,
+            "eval_times": 2**3,
             "id": "BipedalWalker-v3",
         },
     ][flag_id]
