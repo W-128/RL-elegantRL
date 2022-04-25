@@ -75,8 +75,8 @@ def demo_continuous_action_on_policy():
     print("gpu_id", gpu_id)
     print("env_name", env.env_name)
     args = Arguments(agent, env=env)
-    args.gamma = 0.8
-    args.env.target_return = 243  # set target_reward manually for env 'Pendulum-v0'
+    args.gamma = 0.9
+    args.env.target_return = 230  # set target_reward manually for env 'Pendulum-v0'
     args.learner_gpus = gpu_id
     args.random_seed += gpu_id
 

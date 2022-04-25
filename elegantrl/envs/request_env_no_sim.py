@@ -204,15 +204,17 @@ class RequestEnvNoSim:
         more_provision_penalty = more_provision_penalty / (self.threshold *
                                                            self.state_dim)
 
-        # 成功数量
-        success_num = min(sum(action), self.threshold) / float(self.threshold)
-
+        # 成功奖励
+        success_reward = 0
+        for index in range(len(action)):
+            success_reward += ((self.success_reward_scale - index * 0.1) * min(
+                action[index], self.threshold)) / float(self.threshold)
         # 失败数量
         fail_num = 0
         if action[0] < len(self.active_request_group_by_remaining_time_list[0]):
             fail_num = (len(self.active_request_group_by_remaining_time_list[0]) - action[0]) / float(self.threshold)
 
-        return self.success_reward_scale * success_num \
+        return success_reward \
                + self.fail_penalty_scale * fail_num \
                + self.more_provision_penalty_scale * more_provision_penalty \
                + self.more_than_threshold_penalty_scale * more_than_threshold_penalty
