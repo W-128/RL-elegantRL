@@ -11,13 +11,12 @@ from elegantrl.train.run import *
 from elegantrl.agents import *
 from elegantrl.train.config import Arguments
 from elegantrl.envs.request_env_no_sim_sla_violate import RequestEnvNoSimSLAViolate
-
 """custom env"""
 
 
 class RequestEnvNoSimWrapper():
 
-    def __init__(self, more_than_threshold_penalty_scale=-3) -> None:
+    def __init__(self, more_than_threshold_penalty_scale=-2) -> None:
         self.env = RequestEnvNoSimSLAViolate()
         self.env_num = 1
         self.env_name = 'RequestEnvNoSimSLAViolate'

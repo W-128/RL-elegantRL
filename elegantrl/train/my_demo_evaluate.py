@@ -13,7 +13,6 @@ from elegantrl.train.config import Arguments
 from elegantrl.envs.request_env_no_sim_sla_violate import RequestEnvNoSimSLAViolate
 from elegantrl.train.evaluator import \
     get_episode_return_and_step_and_success_rate_and_more_provision_and_variance_and_more_than_threshold_rate
-
 """custom env"""
 
 
@@ -72,7 +71,7 @@ def evaluate_agent():
     agent = AgentPPO
     args = Arguments(agent, env=env)
     act = agent(args.net_dim, env.state_dim, env.action_dim).act
-    actor_path = './RequestEnvNoSimSLAViolate_PPO_0/actor_00004245_00203.058.pth'
+    actor_path = './RequestEnvNoSimSLAViolate_PPO_0/actor_00634551_00194.767.pth'
     act.load_state_dict(
         torch.load(actor_path, map_location=lambda storage, loc: storage))
 
@@ -88,10 +87,11 @@ def evaluate_agent():
         axis=0)  # average of episode return and episode step
 
     print(
-        "奖励平均值：{:.1f}, 成功率平均值：{:.1f}%, 违约率：{:.1f}%, 超供程度平均值：{:.1f}, 超供率平均值：{:.1f}, 提交量大于阈值的概率：{:.1f}%, 方差平均值：{:.1f}, 步数平均值：{:.1f}"
-            .format(r_avg, success_rate_avg, sla_violate_avg, more_provision_sum_avg, more_provision_rate_avg,
-                    more_than_threshold_rate_avg,
-                    variance_avg, s_avg))
+        "奖励平均值：{:.1f}, 成功率平均值：{:.1f}%, 违约率：{:.1f}%, 超供程度平均值：{:.1f}, 超供率平均值：{:.1f}, 提交量大于阈值的概率：{:.5f}%, 方差平均值：{:.1f}, 步数平均值：{:.1f}"
+        .format(r_avg, success_rate_avg, sla_violate_avg,
+                more_provision_sum_avg, more_provision_rate_avg,
+                more_than_threshold_rate_avg, variance_avg, s_avg))
 
-    if __name__ == "__main__":
-        evaluate_agent()
+
+if __name__ == "__main__":
+    evaluate_agent()
