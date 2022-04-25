@@ -13,6 +13,7 @@ from elegantrl.train.config import Arguments
 from elegantrl.envs.request_env_no_sim import RequestEnvNoSim
 from elegantrl.train.evaluator import \
     get_episode_return_and_step_and_success_rate_and_more_provision_and_variance_and_more_than_threshold_rate
+
 """custom env"""
 
 
@@ -50,10 +51,14 @@ class RequestEnvNoSimWrapper():
     def get_more_provision_sum(self):
         return self.env.get_more_provision_sum()
 
-    def get_submit_request_num_per_second_variance_and_more_than_threshold_rate(
-            self):
-        return self.env.get_submit_request_num_per_second_variance_and_more_than_threshold_rate(
-        )
+    def get_more_than_threshold_rate(self):
+        return self.env.get_more_than_threshold_rate()
+
+    def get_submit_request_num_per_second_variance(self):
+        return self.env.get_submit_request_num_per_second_variance()
+
+    def print_wait_time_avg(self):
+        return self.env.print_wait_time_avg()
 
 
 def evaluate_agent():
@@ -66,20 +71,21 @@ def evaluate_agent():
         torch.load(actor_path, map_location=lambda storage, loc: storage))
 
     eval_times = 4
-    r_s_success_rate_more_provision_variance_more_than_threshold_rate_ary = [
+    r_s_success_rate_more_provision_variance_more_than_threshold_rate_sla_violate_ary = [
         get_episode_return_and_step_and_success_rate_and_more_provision_and_variance_and_more_than_threshold_rate(
             env, act) for _ in range(eval_times)
     ]
-    r_s_success_rate_more_provision_variance_more_than_threshold_rate_ary = np.array(
-        r_s_success_rate_more_provision_variance_more_than_threshold_rate_ary,
+    r_s_success_rate_more_provision_variance_more_than_threshold_rate_sla_violate_ary = np.array(
+        r_s_success_rate_more_provision_variance_more_than_threshold_rate_sla_violate_ary,
         dtype=np.float32)
-    r_avg, s_avg, success_rate_avg, more_provision_avg, variance_avg, more_than_threshold_rate_avg = r_s_success_rate_more_provision_variance_more_than_threshold_rate_ary.mean(
+    r_avg, s_avg, success_rate_avg, more_provision_sum_avg, more_provision_rate_avg, variance_avg, more_than_threshold_rate_avg = r_s_success_rate_more_provision_variance_more_than_threshold_rate_sla_violate_ary.mean(
         axis=0)  # average of episode return and episode step
 
     print(
-        "奖励平均值：{:.1f}, 步数平均值：{:.1f}, 成功率平均值：{:.1f}%, 超供量平均值：{:.1f}, 方差平均值：{:.1f}, 提交量大于阈值的概率：{:.1f}%"
-        .format(r_avg, s_avg, success_rate_avg, more_provision_avg,
-                variance_avg, more_than_threshold_rate_avg))
+        "奖励平均值：{:.1f}, 成功率平均值：{:.1f}%, 超供程度平均值：{:.1f}%, 超供率平均值：{:.1f}%, 提交量大于阈值的概率：{:.5f}%, 方差平均值：{:.1f}, 步数平均值：{:.1f}"
+            .format(r_avg, success_rate_avg,
+                    more_provision_sum_avg, more_provision_rate_avg,
+                    more_than_threshold_rate_avg, variance_avg, s_avg))
 
 
 if __name__ == "__main__":

@@ -85,6 +85,15 @@ class Evaluator:  # [ElegantRL.2022.01.01]
                 print(
                     f"{self.agent_id:<3}{self.total_step:8.2e}{self.r_max:8.2f} |"
                 )  # save policy and print
+                """打印现在的无超阈值惩罚奖励以及各个评估指标"""
+                print(
+                    "成功率：{:.1f}%, 提交量大于阈值的概率：{:.5f}%, 超供率：{:.1f}%, 超供程度：{:.1f}%, 方差：{:.1f}"
+                        .format(
+                        self.eval_env.get_success_rate() * 100,
+                        self.eval_env.get_more_than_threshold_rate() * 100,
+                        self.eval_env.get_more_provision_rate() * 100,
+                        self.eval_env.get_more_provision_sum() * 100,
+                        self.eval_env.get_submit_request_num_per_second_variance()))
             """record the training information"""
             self.recorder.append((self.total_step, r_avg, r_std, r_exp,
                                   *log_tuple))  # update recorder
@@ -178,8 +187,8 @@ def get_episode_return_and_step(env,
     return episode_return, episode_step
 
 
-def get_episode_s_tensor_list_and_a_tensor_list(env,
-                                                act) -> (float, int):  # [ElegantRL.2022.01.01]
+def get_episode_s_tensor_list_and_a_tensor_list(
+        env, act) -> (float, int):  # [ElegantRL.2022.01.01]
     """Usage
     eval_times = 4
     net_dim = 2 ** 7
@@ -226,8 +235,8 @@ def get_episode_s_tensor_list_and_a_tensor_list(env,
 
 
 def get_episode_return_and_step_and_success_rate_and_more_provision_and_variance_and_more_than_threshold_rate(
-        env,
-        act) -> (float, int, float, float, float):  # [ElegantRL.2022.01.01]
+        env, act
+) -> (float, int, float, float, float, float, float):  # [ElegantRL.2022.01.01]
     max_step = env.max_step
     if_discrete = env.if_discrete
     device = next(
@@ -251,9 +260,11 @@ def get_episode_return_and_step_and_success_rate_and_more_provision_and_variance
     episode_return = getattr(env, "episode_return", episode_return)
     episode_step += 1
     episode_success_rate = env.get_success_rate() * 100
-    episode_more_provision_sum = env.get_more_provision_sum()
-    episode_variance, episode_more_than_threshold_rate = env.get_submit_request_num_per_second_variance_and_more_than_threshold_rate()
-    return episode_return, episode_step, episode_success_rate, episode_more_provision_sum, episode_variance, episode_more_than_threshold_rate
+    episode_more_provision_sum = env.get_more_provision_sum() * 100
+    episode_more_provision_rate = env.get_more_provision_rate() * 100
+    episode_variance = env.get_submit_request_num_per_second_variance()
+    episode_more_than_threshold_rate = env.get_more_than_threshold_rate() * 100
+    return episode_return, episode_step, episode_success_rate, episode_more_provision_sum, episode_more_provision_rate, episode_variance, episode_more_than_threshold_rate
 
 
 def save_learning_curve(
