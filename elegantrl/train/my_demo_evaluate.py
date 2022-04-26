@@ -60,13 +60,15 @@ class RequestEnvNoSimWrapper():
     def print_wait_time_avg(self):
         return self.env.print_wait_time_avg()
 
+    def get_more_provision_rate(self):
+        return self.env.get_more_provision_rate()
 
 def evaluate_agent():
     env = RequestEnvNoSimWrapper(more_than_threshold_penalty_scale=0)
     agent = AgentPPO
     args = Arguments(agent, env=env)
     act = agent(args.net_dim, env.state_dim, env.action_dim).act
-    actor_path = 'RequestEnvNoSim_PPO_0/actor_00974997_00185.450.pth'
+    actor_path = 'RequestEnvNoSim_PPO_0/actor_04788981_00213.703.pth'
     act.load_state_dict(
         torch.load(actor_path, map_location=lambda storage, loc: storage))
 
