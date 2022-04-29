@@ -31,6 +31,7 @@ class RequestEnvNoSimWrapper():
         self.target_return = 270
         self.if_discrete = False
         self.env.more_than_threshold_penalty_scale = more_than_threshold_penalty_scale
+        self.env.invalid_action_optim = True
 
     def reset(self):
         reset_state = np.asarray(self.env.reset(),
@@ -63,12 +64,13 @@ class RequestEnvNoSimWrapper():
     def get_more_provision_rate(self):
         return self.env.get_more_provision_rate()
 
+
 def evaluate_agent():
     env = RequestEnvNoSimWrapper(more_than_threshold_penalty_scale=0)
     agent = AgentPPO
     args = Arguments(agent, env=env)
     act = agent(args.net_dim, env.state_dim, env.action_dim).act
-    actor_path = 'RequestEnvNoSim_PPO_0/actor_04788981_00213.703.pth'
+    actor_path = 'RequestEnvNoSim_PPO_0/actor_10163472_00218.798.pth'
     act.load_state_dict(
         torch.load(actor_path, map_location=lambda storage, loc: storage))
 

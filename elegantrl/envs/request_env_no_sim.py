@@ -108,6 +108,10 @@ class RequestEnvNoSim:
                     probability_action[index] *
                     len(self.active_request_group_by_remaining_time_list[index]
                         ), 0))
+        if self.invalid_action_optim:
+            if index == 0:
+                if number_action[0] < len(self.active_request_group_by_remaining_time_list[0]):
+                    number_action[0] = min(self.threshold, len(self.active_request_group_by_remaining_time_list[0]))
         return number_action
 
     # 返回奖励值和下一个状态
@@ -342,3 +346,9 @@ class RequestEnvNoSim:
             wait_time_arr = np.array(np.array(success_request_rtl_dic[rtl])[:, WAIT_TIME_INDEX], dtype=int)
             wait_time_avg = np.average(wait_time_arr)
             print('rtl:' + str(rtl) + '等待时间平均值:{:.1f}'.format(wait_time_avg))
+
+    def get_now_state(self):
+        state = []
+        for active_request_group_by_remaining_time in self.active_request_group_by_remaining_time_list:
+            state.append(len(active_request_group_by_remaining_time))
+        return state

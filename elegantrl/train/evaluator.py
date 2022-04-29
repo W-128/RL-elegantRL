@@ -11,7 +11,7 @@ class Evaluator:  # [ElegantRL.2022.01.01]
         self.save_s_tensor_list_and_a_tensor_list = 0
         self.recorder = list()  # total_step, r_avg, r_std, obj_c, ...
         self.recorder_path = f"{cwd}/recorder.npy"
-
+        self.args = args
         self.cwd = cwd
         self.agent_id = agent_id
         self.eval_env = eval_env
@@ -25,7 +25,7 @@ class Evaluator:  # [ElegantRL.2022.01.01]
         self.used_time = 0
         self.total_step = 0
         self.start_time = time.time()
-        with open('./result.txt', 'a+') as f:
+        with open('./result' + str(self.args.gamma) + '.txt', 'a+') as f:
             print(
                 f"{'#' * 80}\n"
                 f"{'ID':<3}{'Step':>8}{'maxR':>8} |"
@@ -65,15 +65,15 @@ class Evaluator:  # [ElegantRL.2022.01.01]
             r_std, s_std = rewards_steps_ary.std(
                 axis=0)  # standard dev. of episode return and episode step
 
-            if self.save_s_tensor_list_and_a_tensor_list == 0:
-                make_dir('./episode_evaluate')
-            s_a_list = get_episode_s_tensor_list_and_a_tensor_list(
-                self.eval_env, act)
-            np.save(
-                './episode_evaluate/evaluate_episode' +
-                str(self.save_s_tensor_list_and_a_tensor_list) + '.npy',
-                np.array(s_a_list))
-            self.save_s_tensor_list_and_a_tensor_list += 1
+            # if self.save_s_tensor_list_and_a_tensor_list == 0:
+            #     make_dir('./episode_evaluate')
+            # s_a_list = get_episode_s_tensor_list_and_a_tensor_list(
+            #     self.eval_env, act)
+            # np.save(
+            #     './episode_evaluate/evaluate_episode' +
+            #     str(self.save_s_tensor_list_and_a_tensor_list) + '.npy',
+            #     np.array(s_a_list))
+            # self.save_s_tensor_list_and_a_tensor_list += 1
             """save the policy network"""
             if_save = r_avg > self.r_max
             if if_save:  # save checkpoint with highest episode return
@@ -84,14 +84,15 @@ class Evaluator:  # [ElegantRL.2022.01.01]
                 )
                 torch.save(act.state_dict(),
                            act_path)  # save policy network in *.pth
-                with open('./result.txt', 'a+') as f:
+                with open('./result' + str(self.args.gamma) + '.txt',
+                          'a+') as f:
                     print(
                         f"{self.agent_id:<3}{self.total_step:8.2e}{self.r_max:8.2f} |",
                         file=f)  # save policy and print
                     """打印现在的无超阈值惩罚奖励以及各个评估指标"""
                     print(
                         "成功率：{:.1f}%, 提交量大于阈值的概率：{:.5f}%, 超供率：{:.1f}%, 超供程度：{:.1f}%, 方差：{:.1f}"
-                        .format(
+                            .format(
                             self.eval_env.get_success_rate() * 100,
                             self.eval_env.get_more_than_threshold_rate() * 100,
                             self.eval_env.get_more_provision_rate() * 100,
@@ -114,13 +115,13 @@ class Evaluator:  # [ElegantRL.2022.01.01]
                     f"{self.agent_id:<3}{self.total_step:8.2e}{self.target_return:8.2f} |"
                     f"{r_avg:8.2f}{r_std:7.1f}{s_avg:7.0f}{s_std:6.0f} |"
                     f"{self.used_time:>8}  ########")
-            with open('./result.txt', 'a+') as f:
+            with open('./result' + str(self.args.gamma) + '.txt',
+                      'a+') as f:
                 print(
                     f"{self.agent_id:<3}{self.total_step:8.2e}{self.r_max:8.2f} |"
                     f"{r_avg:8.2f}{r_std:7.1f}{s_avg:7.0f}{s_std:6.0f} |"
                     f"{r_exp:8.2f}{''.join(f'{n:7.2f}' for n in log_tuple)}",
                     file=f)
-
             if hasattr(self.eval_env, "curriculum_learning_for_evaluator"):
                 self.eval_env.curriculum_learning_for_evaluator(r_avg)
             """plot learning curve figure"""
