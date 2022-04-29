@@ -62,7 +62,7 @@ class RequestEnvNoSim:
         # action需要从概率到数量
         self.action_is_probability = True
         # 状态向量的维数=rtl的级别个数
-        self.N = 5
+        self.N = 10
         # state=(剩余时间为0的请求个数,...,剩余时间为5的请求个数)
         self.state_dim = self.N + 1
         # [剩余时间为0s的请求列表,剩余时间为1s...,剩余时间为5s的请求列表]

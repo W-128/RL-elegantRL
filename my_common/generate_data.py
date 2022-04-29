@@ -1,5 +1,5 @@
 from my_common.utils import concurrent_request_num_per_second_list_to_concurrent_request_num
-
+import random
 # t=1000ms
 TIME_UNIT = 1
 TIME_UNIT_IN_ON_SECOND = int(1 / TIME_UNIT)
@@ -15,8 +15,8 @@ def request_number(second):
 
 
 temp_list = []
-for second in range(160):
-    temp_list.append(request_number(second))
+for second in range(200):
+    temp_list.append(random.choice([40,80]))
 
 concurrent_request_num_per_second = list(temp_list)
 temp_list.reverse()
