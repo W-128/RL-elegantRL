@@ -159,7 +159,7 @@ def concurrent_request_num_per_second_list_to_concurrent_request_num(
     import uuid
     import csv
     # 先造只有rtl1 和rtl3
-    rtl_list = [3, 5]
+    rtl_list = [2, 4, 6, 8, 10]
 
     request_list = []
     for i in range(len(concurrent_request_num_per_second_list)):
