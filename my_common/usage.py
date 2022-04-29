@@ -1,6 +1,13 @@
 # Load the Dataset and grab a subset
 # In this python code we grab the dataset and scale a subset of dataset to use as
 # sample workload in our application.
+import sys
+import os
+
+curPath = os.path.abspath(os.path.dirname(__file__))
+rootPath = os.path.split(curPath)[0]
+sys.path.append(os.path.split(rootPath)[0])
+sys.path.append(rootPath)
 
 import pandas as pd
 import seaborn as sns
@@ -12,10 +19,9 @@ df = pd.read_csv(csv_file, index_col=0, parse_dates=True)
 df = df.groupby('period').sum()
 # similar to paper: Stochastic Resource Provisioning for
 #                   Containerized Multi-Tier Web Services in Clouds
-# sub_df = df['1998-06-30 08:00:01':'1998-07-01 08:00:00']
-sub_df = df['1998-06-30 08:00:01':'1998-06-30 18:00:00']
-# sub_df = df['1998-06-30 08:00:01':'1998-07-10 18:00:00']
-
+# sub_df = df['1998-06-02 12:00:01':'1998-06-04 00:00:00']
+# sub_df = df['1998-06-30 08:00:01':'1998-06-30 18:00:00']
+sub_df = df['1998-06-29 08:00:01':'1998-07-01 08:00:00']
 
 sns.set()
 
