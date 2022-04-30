@@ -14,6 +14,7 @@ import numpy as np
 from pathlib import Path
 import matplotlib.pyplot as plt
 import seaborn as sns
+import random
 
 from matplotlib.font_manager import FontProperties  # 导入字体模块
 
@@ -159,7 +160,7 @@ def concurrent_request_num_per_second_list_to_concurrent_request_num(
     import uuid
     import csv
     # 先造只有rtl1 和rtl3
-    rtl_list = [1,10]
+    rtl_list = [1, 5, 10]
 
     request_list = []
     for i in range(len(concurrent_request_num_per_second_list)):
@@ -169,7 +170,14 @@ def concurrent_request_num_per_second_list_to_concurrent_request_num(
             request = []
             request.append(str(uuid.uuid1()))
             request.append(i)
-            request.append(np.random.choice(rtl_list))
+            # request.append(np.random.choice(rtl_list))
+            rtl_float = random.gauss(10, 1)
+            rtl_int = int(rtl_float + 0.5)
+            if rtl_int < 0:
+                rtl_int = 0
+            if rtl_int > 20:
+                rtl_int = 20
+            request.append(rtl_int)
             request_list.append(request)
 
     headers = ['request_id', 'arrive_time', 'rtl']

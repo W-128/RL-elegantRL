@@ -19,7 +19,7 @@ import torch
 # t=1000ms
 TIME_UNIT = 1
 TIME_UNIT_IN_ON_SECOND = int(1 / TIME_UNIT)
-THRESHOLD = int(60 / TIME_UNIT_IN_ON_SECOND)
+THRESHOLD = int(45 / TIME_UNIT_IN_ON_SECOND)
 # 实时用的话，这个地方无法事先写好，只能每秒来append
 # 现在先 直接从文件读取
 
@@ -62,7 +62,7 @@ class RequestEnvNoSim:
         # action需要从概率到数量
         self.action_is_probability = True
         # 状态向量的维数=rtl的级别个数
-        self.N = 10
+        self.N = 20
         # state=(剩余时间为0的请求个数,...,剩余时间为5的请求个数)
         self.state_dim = self.N + 1
         # [剩余时间为0s的请求列表,剩余时间为1s...,剩余时间为5s的请求列表]
@@ -342,6 +342,7 @@ class RequestEnvNoSim:
                 success_request_rtl_dic[success_request[RTL_INDEX]].append(success_request)
             else:
                 success_request_rtl_dic[success_request[RTL_INDEX]] = []
+                success_request_rtl_dic[success_request[RTL_INDEX]].append(success_request)
         for rtl in success_request_rtl_dic:
             wait_time_arr = np.array(np.array(success_request_rtl_dic[rtl])[:, WAIT_TIME_INDEX], dtype=int)
             wait_time_avg = np.average(wait_time_arr)
