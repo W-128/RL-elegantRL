@@ -87,4 +87,4 @@ def demo_continuous_action_on_policy(gamma=0.9):
 
 
 if __name__ == "__main__":
-    demo_continuous_action_on_policy(0.95)
+    demo_continuous_action_on_policy(0.98)
