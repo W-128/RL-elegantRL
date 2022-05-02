@@ -40,11 +40,8 @@ class RequestEnvNoSimWrapper():
 
     def step(self, action: np.ndarray):
         # I suggest to set action space as (-1, +1) when you design your own env.
-        state, reward, done, info_dict = self.env.step(
-            action)  # state, reward, done, info_dict
-        return np.asarray(
-            state,
-            dtype=np.float32) / self.env.threshold, reward, done, info_dict
+        state, reward, done, info_dict = self.env.step(action)  # state, reward, done, info_dict
+        return np.asarray(state, dtype=np.float32) / self.env.threshold, reward, done, info_dict
 
     def get_success_rate(self):
         return self.env.get_success_rate()
@@ -70,7 +67,7 @@ def evaluate_agent():
     agent = AgentPPO
     args = Arguments(agent, env=env)
     act = agent(args.net_dim, env.state_dim, env.action_dim).act
-    actor_path = 'RequestEnvNoSim_PPO_0/actor_10163472_00218.798.pth'
+    actor_path = 'RequestEnvNoSim0.8_PPO_0/actor_04775806_06131.337.pth'
     act.load_state_dict(
         torch.load(actor_path, map_location=lambda storage, loc: storage))
 
