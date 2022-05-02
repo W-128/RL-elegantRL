@@ -33,20 +33,8 @@ WAIT_TIME_INDEX = 3
 
 FRESH_TIME = 1
 
-# t t的长度为TIME_UNIT
-t = 0
 curr_path = os.path.dirname(os.path.abspath(__file__))  # 当前文件所在绝对路径
 curr_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")  # 获取当前时间
-
-
-def t_add_one():
-    global t
-    t = t + 1
-
-
-def t_to_zero():
-    global t
-    t = 0
 
 
 class RequestEnvNoSim:
@@ -88,6 +76,7 @@ class RequestEnvNoSim:
         self.need_evaluate_env_correct = False
         # 测试阶段将该值置为true
         self.invalid_action_optim = False
+        self.t = 0
         '''
         arriveTime_request_dic:
         key=arriveTime
@@ -163,10 +152,10 @@ class RequestEnvNoSim:
                 # 把提交的任务从active_request_list中删除
                 del self.active_request_group_by_remaining_time_list[
                     remaining_time][submit_index]
-                success_request[WAIT_TIME_INDEX] = t - success_request[ARRIVE_TIME_INDEX]
+                success_request[WAIT_TIME_INDEX] = self.t - success_request[ARRIVE_TIME_INDEX]
                 self.success_request_list.append(success_request)
 
-        t_add_one()
+        self.t += 1
 
         # 失败数量
         # remaining_time==0且还留在active_request_group_by_remaining_time_list中的请求此时失败
@@ -220,7 +209,7 @@ class RequestEnvNoSim:
         for i in range(0, len(self.state_record) - 1):
             if self.state_record[i] != 0:
                 remaining_request_is_done = False
-        if t > np.max(list(self.arriveTime_request_dic.keys())) and remaining_request_is_done:
+        if self.t > np.max(list(self.arriveTime_request_dic.keys())) and remaining_request_is_done:
             episode_done = True
         # time.sleep(FRESH_TIME)
         return reward, episode_done
@@ -265,8 +254,8 @@ class RequestEnvNoSim:
         now_new_arrive_request_list = []
         for i in range(self.state_dim):
             now_new_arrive_request_list.append([])
-        if t in self.arriveTime_request_dic:
-            for request_in_dic in self.arriveTime_request_dic[t]:
+        if self.t in self.arriveTime_request_dic:
+            for request_in_dic in self.arriveTime_request_dic[self.t]:
                 # request_in_dic的形式为[request_id, arrive_time, rtl]
                 # request [request_id, arrive_time, rtl, remaining_time]
                 # request_in_dic 转为request
@@ -278,7 +267,7 @@ class RequestEnvNoSim:
 
     #   初始状态
     def reset(self):
-        t_to_zero()
+        self.t = 0
         self.call_get_reward_times = 0
         self.invalid_action_times = 0
         self.success_request_list = []
@@ -290,7 +279,7 @@ class RequestEnvNoSim:
 
     #   初始状态
     def reset_fifo(self):
-        t_to_zero()
+        self.t = 0
         self.call_get_reward_times = 0
         self.invalid_action_times = 0
         self.success_request_list = []
@@ -326,7 +315,7 @@ class RequestEnvNoSim:
         return self.success_request_list, WAIT_TIME_INDEX, RTL_INDEX
 
     def get_submit_request_num_per_second_variance(self):
-        submit_request_num_per_second_list = [0] * t
+        submit_request_num_per_second_list = [0] * self.t
         for success_request in self.success_request_list:
             submit_request_num_per_second_list[
                 success_request[ARRIVE_TIME_INDEX] +
@@ -338,7 +327,7 @@ class RequestEnvNoSim:
         return np.var(submit_request_num_per_second_list)
 
     def get_more_than_threshold_rate(self):
-        submit_request_num_per_second_list = [0] * t
+        submit_request_num_per_second_list = [0] * self.t
         for success_request in self.success_request_list:
             submit_request_num_per_second_list[
                 success_request[ARRIVE_TIME_INDEX] +
