@@ -94,8 +94,7 @@ class RequestEnvNoSim:
         value=arriveTime为key的request_in_dic列表
         request_in_dic的形式为[request_id, arrive_time, rtl]
         '''
-        self.new_arrive_request_in_dic, self.arriveTime_request_dic = get_arrive_time_request_dic(
-            ARRIVE_TIME_INDEX)
+        self.new_arrive_request_in_dic, self.arriveTime_request_dic = get_arrive_time_request_dic(ARRIVE_TIME_INDEX)
         # self.end_request_result_path = curr_path + '/success_request_list/' + curr_time + '/'
         # make_dir(self.end_request_result_path)
 
@@ -110,25 +109,17 @@ class RequestEnvNoSim:
                         ), 0))
         if self.invalid_action_optim:
             if index == 0:
-                if number_action[0] < len(
-                        self.active_request_group_by_remaining_time_list[0]):
-                    number_action[0] = min(
-                        self.threshold,
-                        len(self.active_request_group_by_remaining_time_list[0]
-                            ))
+                if number_action[0] < len(self.active_request_group_by_remaining_time_list[0]):
+                    number_action[0] = min(self.threshold, len(self.active_request_group_by_remaining_time_list[0]))
         return number_action
 
     # 返回奖励值和下一个状态
     def step(self, action):
         if self.action_is_probability:
             action = self.action_probability_to_number(action)
-        # debug
-        # print('action: ' + str(action))
-        # print('t:' + str(t))
 
-        reward = self.get_reward(action)
         # 环境更新
-        done = self.update_env(action)
+        reward, done = self.update_env(action)
 
         # 验证环境正确性
         if done and self.need_evaluate_env_correct:
@@ -139,6 +130,26 @@ class RequestEnvNoSim:
 
         return self.state_record, reward, done, {}
 
+    def step_fifo(self, submit_request_id_list):
+        # submit_request_id_list to action
+        action = [0] * self.action_dim
+        for index in range(len(self.active_request_group_by_remaining_time_list)):
+            for active_request in self.active_request_group_by_remaining_time_list[index]:
+                if active_request[REQUEST_ID_INDEX] in submit_request_id_list:
+                    action[index] += 1
+
+        # 环境更新
+        reward, done = self.update_env(action)
+
+        # 验证环境正确性
+        if done and self.need_evaluate_env_correct:
+            print('环境正确性:' + str(self.is_correct()))
+
+        # debug
+        # print('active_request_list:' + str(self.active_request_group_by_remaining_time_list))
+
+        return self.active_request_group_by_remaining_time_list, reward, done, {}
+
     # 确保action合法
     def update_env(self, action):
         # submit request
@@ -147,35 +158,52 @@ class RequestEnvNoSim:
             for j in range(int(action[remaining_time])):
                 # time_stamp = time.time()
                 submit_index = np.random.choice(
-                    self.active_request_group_by_remaining_time_list[
-                        remaining_time].__len__())
-                end_request = list(
-                    self.active_request_group_by_remaining_time_list[
-                        remaining_time][submit_index])
+                    self.active_request_group_by_remaining_time_list[remaining_time].__len__())
+                success_request = list(self.active_request_group_by_remaining_time_list[remaining_time][submit_index])
                 # 把提交的任务从active_request_list中删除
                 del self.active_request_group_by_remaining_time_list[
                     remaining_time][submit_index]
-                end_request[
-                    WAIT_TIME_INDEX] = t - end_request[ARRIVE_TIME_INDEX]
-                self.success_request_list.append(end_request)
+                success_request[WAIT_TIME_INDEX] = t - success_request[ARRIVE_TIME_INDEX]
+                self.success_request_list.append(success_request)
 
         t_add_one()
 
+        # 失败数量
         # remaining_time==0且还留在active_request_group_by_remaining_time_list中的请求此时失败
-        for active_request in self.active_request_group_by_remaining_time_list[
-                0]:
+        fail_num = len(self.active_request_group_by_remaining_time_list[0]) / float(self.threshold)
+        for active_request in self.active_request_group_by_remaining_time_list[0]:
             self.fail_request_list.append(list(active_request))
         self.active_request_group_by_remaining_time_list[0] = []
 
+        # 超阈值惩罚
+        more_than_threshold_penalty = 0
+        if sum(action) > self.threshold:
+            more_than_threshold_penalty = (sum(action) - self.threshold) / float(self.threshold)
+
+        # 超供惩罚
+        more_provision_penalty = 0
+        for index in range(1, self.action_dim - 1):
+            more_provision_penalty -= action[index] * index
+        more_provision_penalty = more_provision_penalty / (self.threshold * self.state_dim)
+
+        # 成功奖励
+        success_reward = 0
+        for index in range(len(action)):
+            success_reward += ((self.success_reward_scale - index * 0.055) * min(action[index],
+                                                                                 self.threshold)) / float(
+                self.threshold)
+            # success_reward += self.success_reward_scale * min(action[index], self.threshold) / float(self.threshold)
+
+        reward = success_reward \
+                 + self.fail_penalty_scale * fail_num \
+                 + self.more_provision_penalty_scale * more_provision_penalty \
+                 + self.more_than_threshold_penalty_scale * more_than_threshold_penalty
+
         # active_request_group_by_remaining_time_list 剩余时间要推移
-        for i in range(1,
-                       len(self.active_request_group_by_remaining_time_list)):
-            for active_request in self.active_request_group_by_remaining_time_list[
-                    i]:
-                active_request[REMAINING_TIME_INDEX] = active_request[
-                    REMAINING_TIME_INDEX] - 1
-                self.active_request_group_by_remaining_time_list[i - 1].append(
-                    list(active_request))
+        for i in range(1, len(self.active_request_group_by_remaining_time_list)):
+            for active_request in self.active_request_group_by_remaining_time_list[i]:
+                active_request[REMAINING_TIME_INDEX] = active_request[REMAINING_TIME_INDEX] - 1
+                self.active_request_group_by_remaining_time_list[i - 1].append(list(active_request))
             self.active_request_group_by_remaining_time_list[i] = []
 
         episode_done = False
@@ -192,47 +220,10 @@ class RequestEnvNoSim:
         for i in range(0, len(self.state_record) - 1):
             if self.state_record[i] != 0:
                 remaining_request_is_done = False
-        if t > np.max(list(self.arriveTime_request_dic.keys())
-                      ) and remaining_request_is_done:
+        if t > np.max(list(self.arriveTime_request_dic.keys())) and remaining_request_is_done:
             episode_done = True
         # time.sleep(FRESH_TIME)
-        return episode_done
-
-    def get_reward(self, action):
-        # action[提交剩余时间为0的请求数量, 提交剩余时间为1的请求数量, 提交剩余时间为N的请求数量]
-        self.call_get_reward_times += 1
-
-        # 超阈值惩罚
-        more_than_threshold_penalty = 0
-        if sum(action) > self.threshold:
-            more_than_threshold_penalty = (
-                sum(action) - self.threshold) / float(self.threshold)
-
-        # 超供惩罚
-        more_provision_penalty = 0
-        for index in range(1, self.action_dim - 1):
-            more_provision_penalty -= action[index] * index
-        more_provision_penalty = more_provision_penalty / (self.threshold *
-                                                           self.state_dim)
-
-        # 成功奖励
-        success_reward = 0
-        for index in range(len(action)):
-            success_reward += (
-                (self.success_reward_scale - index * 0.1) *
-                min(action[index], self.threshold)) / float(self.threshold)
-        # 失败数量
-        fail_num = 0
-        if action[0] < len(
-                self.active_request_group_by_remaining_time_list[0]):
-            fail_num = (
-                len(self.active_request_group_by_remaining_time_list[0]) -
-                action[0]) / float(self.threshold)
-
-        return success_reward \
-               + self.fail_penalty_scale * fail_num \
-               + self.more_provision_penalty_scale * more_provision_penalty \
-               + self.more_than_threshold_penalty_scale * more_than_threshold_penalty
+        return reward, episode_done
 
     # request_list -> state
     def active_request_group_by_remaining_time_list_to_state(self):
@@ -282,9 +273,7 @@ class RequestEnvNoSim:
                 request = list(request_in_dic)
                 # 刚加进缓冲时 remaining_time=rtl
                 request.append(request_in_dic[RTL_INDEX])
-                now_new_arrive_request_list[request[REMAINING_TIME_INDEX] //
-                                            TIME_UNIT_IN_ON_SECOND].append(
-                                                request)
+                now_new_arrive_request_list[request[REMAINING_TIME_INDEX] // TIME_UNIT_IN_ON_SECOND].append(request)
         return now_new_arrive_request_list
 
     #   初始状态
@@ -294,10 +283,22 @@ class RequestEnvNoSim:
         self.invalid_action_times = 0
         self.success_request_list = []
         self.fail_request_list = []
-        self.active_request_group_by_remaining_time_list = self.get_new_arrive_request_list(
-        )
+        self.new_arrive_request_in_dic, self.arriveTime_request_dic = get_arrive_time_request_dic(ARRIVE_TIME_INDEX)
+        self.active_request_group_by_remaining_time_list = self.get_new_arrive_request_list()
         self.active_request_group_by_remaining_time_list_to_state()
         return self.state_record
+
+    #   初始状态
+    def reset_fifo(self):
+        t_to_zero()
+        self.call_get_reward_times = 0
+        self.invalid_action_times = 0
+        self.success_request_list = []
+        self.fail_request_list = []
+        self.new_arrive_request_in_dic, self.arriveTime_request_dic = get_arrive_time_request_dic(ARRIVE_TIME_INDEX)
+        self.active_request_group_by_remaining_time_list = self.get_new_arrive_request_list()
+        self.active_request_group_by_remaining_time_list_to_state()
+        return self.active_request_group_by_remaining_time_list
 
     def get_active_request_sum(self):
         sum = 0
@@ -310,8 +311,7 @@ class RequestEnvNoSim:
         for success_request in self.success_request_list:
             if success_request[RTL_INDEX] > success_request[WAIT_TIME_INDEX]:
                 more_provision_request_num += 1
-        return float(more_provision_request_num) / len(
-            self.new_arrive_request_in_dic)
+        return float(more_provision_request_num) / len(self.new_arrive_request_in_dic)
 
     def get_more_provision_sum(self):
         more_provision_list = []
