@@ -21,8 +21,7 @@ def get_arrive_time_request_dic(arrive_time_index):
     arriveTime_request_dic = {}
     for request_in_dic in new_arrive_request_in_dic:
         if request_in_dic[arrive_time_index] in arriveTime_request_dic:
-            arriveTime_request_dic[request_in_dic[arrive_time_index]].append(
-                request_in_dic)
+            arriveTime_request_dic[request_in_dic[arrive_time_index]].append(request_in_dic)
         else:
             request_list = [request_in_dic]
             arriveTime_request_dic[

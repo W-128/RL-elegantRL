@@ -12,6 +12,7 @@ def test(cfg, env, agent):
         if done:
             # env.save_success_request()
             break
+    print('step:'+str(env.t))
     print('该回合奖励：' + str(ep_reward))
     print('成功率：{:.1f}%'.format(env.get_success_rate() * 100))
     print('超供率：{:.1f}%'.format(env.get_more_provision_rate() * 100))
@@ -34,6 +35,7 @@ def test_fifo(cfg, env, agent):
         ep_reward += reward
         if done:
             break
+    print('step:'+str(env.t))
     print('该回合奖励：' + str(ep_reward))
     print('成功率：{:.1f}%'.format(env.get_success_rate() * 100))
     print('超供率：{:.1f}%'.format(env.get_more_provision_rate() * 100))
