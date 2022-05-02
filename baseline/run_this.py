@@ -6,8 +6,8 @@ rootPath = os.path.split(curPath)[0]
 sys.path.append(rootPath)
 
 from elegantrl.envs.request_env_no_sim import RequestEnvNoSim
-from agent import RandomChoose, EDF, EDFSubmitThreshold
-from train_test import test
+from agent import RandomChoose, EDF, EDFSubmitThreshold, fifo
+from train_test import test, test_fifo
 import datetime
 import torch
 from my_common.utils import make_dir
@@ -19,13 +19,14 @@ curr_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")  # 获取当前时
 env_name = 'request_env_no_sim'  # 环境名称
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")  # 检测GPU
 
-# request=[request_id, arrive_time, rtl, remaining_time]
-# success_request_list[request_id, arrive_time, rtl, wait_time]
+# request=[request_id, arrive_time, rtl, task_id, remaining_time]
+# success_request_list[request_id, arrive_time, rtl, task_id, wait_time]
 REQUEST_ID_INDEX = 0
 ARRIVE_TIME_INDEX = 1
 RTL_INDEX = 2
-REMAINING_TIME_INDEX = 3
-WAIT_TIME_INDEX = 3
+TASK_ID_INDEX = 3
+REMAINING_TIME_INDEX = 4
+WAIT_TIME_INDEX = 4
 # t=1000ms
 TIME_UNIT = 1
 TIME_UNIT_IN_ON_SECOND = int(1 / TIME_UNIT)
@@ -64,19 +65,29 @@ class EDFConfig:
         self.save = True  # 是否保存图片
 
 
+class FIFOConfig:
+    '''训练相关参数'''
+
+    def __init__(self):
+        self.algo_name = 'fifo'  # 算法名称
+        self.env_name = env_name  # 环境名称
+        self.result_path = curr_path + "/outputs/" + self.env_name + \
+                           '/' + self.algo_name + '/results/'  # 保存结果的路径
+        self.save = True  # 是否保存图片
+
+
 env = RequestEnvNoSim()
 
 THRESHOLD = env.threshold
 
 env.action_is_probability = False
 
-random_choose_cfg = RandomChooseConfig()
-make_dir(random_choose_cfg.result_path)  # 创建模型路径的文件夹
-agent = RandomChoose(env.action_dim)
-success_request, waiting_time_index, rtl_index = test(random_choose_cfg, env,
-                                                      agent)
-# plot_waiting_time_and_require_time(success_request, waiting_time_index,
-#                                    rtl_index, random_choose_cfg)
+# random_choose_cfg = RandomChooseConfig()
+# make_dir(random_choose_cfg.result_path)  # 创建模型路径的文件夹
+# agent = RandomChoose(env.action_dim)
+# success_request, waiting_time_index, rtl_index = test(random_choose_cfg, env,agent)
+# # plot_waiting_time_and_require_time(success_request, waiting_time_index,
+# #                                    rtl_index, random_choose_cfg)
 
 print("==========================================================")
 edf_config = EDFConfig()
@@ -90,12 +101,16 @@ print("==========================================================")
 edf_submit_threshold_config = EDFSubmitThresholdConfig()
 make_dir(edf_submit_threshold_config.result_path)  # 创建模型路径的文件夹
 agent = EDFSubmitThreshold(env.action_dim)
-success_request, waiting_time_index, rtl_index = test(
-    edf_submit_threshold_config, env, agent)
-
-
+success_request, waiting_time_index, rtl_index = test(edf_submit_threshold_config, env, agent)
 # plot_waiting_time_and_require_time(success_request, waiting_time_index,
 #                                    rtl_index, edf_submit_threshold_config)
+
+print("==========================================================")
+fifo_config = FIFOConfig()
+make_dir(fifo_config.result_path)  # 创建模型路径的文件夹
+agent = fifo(env.action_dim)
+success_request, waiting_time_index, rtl_index = test_fifo(fifo_config, env, agent)
+
 
 # FIFO
 class FIFO:
@@ -184,7 +199,6 @@ class FIFO:
                 / success_request[RTL_INDEX])
         return np.sum(more_provision_list)
 
-
     def get_more_provision_rate(self):
         more_provision_request_num = 0
         for success_request in self.success_request_list:
@@ -211,9 +225,8 @@ class FIFO:
                 more_than_threshold_times += 1
         return np.var(submit_request_num_per_second_list)
 
-
-print("====================================================")
-fifo = FIFO()
-done = False
-while done != True:
-    done = fifo.step()
+# print("====================================================")
+# fifo = FIFO()
+# done = False
+# while done != True:
+#     done = fifo.step()

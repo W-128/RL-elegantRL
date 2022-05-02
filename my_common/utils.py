@@ -155,12 +155,28 @@ def del_empty_dir(*paths):
                 os.removedirs(os.path.join(path, dir))
 
 
+def generate_next_request(success_request, REQUEST_ID_INDEX, ARRIVE_TIME_INDEX, RTL_INDEX, TASK_ID_INDEX,
+                          REMAINING_TIME_INDEX, WAIT_TIME_INDEX):
+    # request_in_dic= [request_id, arrive_time, rtl, task_id]
+    # success_request=[request_id, arrive_time, rtl, task_id, wait_time]
+    if success_request[TASK_ID_INDEX] == 'task1':
+        arrive_time = success_request[WAIT_TIME_INDEX] + success_request[ARRIVE_TIME_INDEX] + 3
+        rtl = success_request[RTL_INDEX]
+        request = []
+        request.append(success_request[REQUEST_ID_INDEX]+'-1')
+        request.append(arrive_time)
+        request.append(rtl)
+        request.append('task2')
+        return request
+    return []
+
+
 def concurrent_request_num_per_second_list_to_concurrent_request_num(
         concurrent_request_num_per_second_list):
     import uuid
     import csv
     # 先造只有rtl1 和rtl3
-    rtl_list = [1,10]
+    rtl_list = [1, 10]
 
     request_list = []
     for i in range(len(concurrent_request_num_per_second_list)):

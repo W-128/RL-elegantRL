@@ -22,7 +22,7 @@ df = df.groupby('datetime').sum()
 #                   Containerized Multi-Tier Web Services in Clouds
 # sub_df = df['1998-06-02 12:00:01':'1998-06-04 00:00:00']
 # sub_df = df['1998-06-30 08:00:01':'1998-06-30 18:00:00']
-sub_df = df['1995-07-01 00:00:00':'1995-07-01 08:00:00']
+sub_df = df['1995-07-01 00:00:00':'1995-07-01 01:00:00']
 
 sns.set()
 
@@ -33,7 +33,9 @@ scaled_sub_df = (sub_df / sub_df['view'].max() *
                  scaled_max).apply(lambda x: round(x))
 scaled_sub_df['view'] = scaled_sub_df['view'].apply(lambda x: int(x))
 
-print(np.mean(scaled_sub_df['view']))
+print('流量均值' + str(np.mean(scaled_sub_df['view'])))
+print('流量总值' + str(np.sum(scaled_sub_df['view'])))
+
 scaled_sub_df.plot()
 plt.savefig('nasa_sample.png')
 plt.show()
