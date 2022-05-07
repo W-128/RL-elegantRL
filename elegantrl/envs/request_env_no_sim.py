@@ -17,7 +17,7 @@ from my_common.utils import generate_next_request
 # t=1000ms
 TIME_UNIT = 1
 TIME_UNIT_IN_ON_SECOND = int(1 / TIME_UNIT)
-THRESHOLD = int(90 / TIME_UNIT_IN_ON_SECOND)
+THRESHOLD = int(105 / TIME_UNIT_IN_ON_SECOND)
 # 实时用的话，这个地方无法事先写好，只能每秒来append
 # 现在先 直接从文件读取
 

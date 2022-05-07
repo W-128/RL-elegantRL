@@ -187,12 +187,12 @@ def concurrent_request_num_per_second_list_to_concurrent_request_num(
             request.append(str(uuid.uuid1()))
             request.append(i)
             # request.append(np.random.choice(rtl_list))
-            rtl_float = random.gauss(10, 1)
+            rtl_float = random.gauss(5, 1)
             rtl_int = int(rtl_float + 0.5)
-            if rtl_int < 0:
-                rtl_int = 0
-            if rtl_int > 20:
-                rtl_int = 20
+            if rtl_int < 1:
+                rtl_int = 1
+            if rtl_int > 10:
+                rtl_int = 10
             request.append(rtl_int)
             request_list.append(request)
 
