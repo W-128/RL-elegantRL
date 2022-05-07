@@ -22,7 +22,7 @@ df = df.groupby('datetime').sum()
 #                   Containerized Multi-Tier Web Services in Clouds
 # sub_df = df['1998-06-02 12:00:01':'1998-06-04 00:00:00']
 # sub_df = df['1998-06-30 08:00:01':'1998-06-30 18:00:00']
-sub_df = df['1995-07-01 00:00:00':'1995-07-02 00:00:00']
+sub_df = df['1995-07-01 00:00:00':'1995-07-03 00:00:00']
 
 sns.set()
 
@@ -41,6 +41,5 @@ plt.show()
 concurrent_request_num_per_second_list = []
 for i in range(len(scaled_sub_df.index)):
     concurrent_request_num_per_second_list.append(scaled_sub_df['view'][i])
-concurrent_request_num_per_second_list_to_concurrent_request_num(
-    concurrent_request_num_per_second_list)
+concurrent_request_num_per_second_list_to_concurrent_request_num(concurrent_request_num_per_second_list)
 print(scaled_sub_df['view'].values)

@@ -17,7 +17,7 @@ from my_common.utils import generate_next_request
 # t=1000ms
 TIME_UNIT = 1
 TIME_UNIT_IN_ON_SECOND = int(1 / TIME_UNIT)
-THRESHOLD = int(105 / TIME_UNIT_IN_ON_SECOND)
+THRESHOLD = int(135 / TIME_UNIT_IN_ON_SECOND)
 # 实时用的话，这个地方无法事先写好，只能每秒来append
 # 现在先 直接从文件读取
 
@@ -29,7 +29,6 @@ RTL_INDEX = 2
 TASK_ID_INDEX = 3
 REMAINING_TIME_INDEX = 4
 WAIT_TIME_INDEX = 4
-
 FRESH_TIME = 1
 
 curr_path = os.path.dirname(os.path.abspath(__file__))  # 当前文件所在绝对路径
@@ -72,7 +71,7 @@ class RequestEnvNoSim:
         self.threshold = THRESHOLD
         self.call_get_reward_times = 0
         self.invalid_action_times = 0
-        self.need_evaluate_env_correct = False
+        self.need_evaluate_env_correct = True
         # 测试阶段将该值置为true
         self.invalid_action_optim = False
         self.t = 0
@@ -84,7 +83,7 @@ class RequestEnvNoSim:
         request_in_dic的形式为[request_id, arrive_time, rtl, task_id]
         '''
         self.new_arrive_request_in_dic, self.arriveTime_request_dic = get_arrive_time_request_dic(ARRIVE_TIME_INDEX)
-        self.all_request_num = len(self.new_arrive_request_in_dic) * 2
+        self.all_request_num = len(self.new_arrive_request_in_dic) * 3
         # self.end_request_result_path = curr_path + '/success_request_list/' + curr_time + '/'
         # make_dir(self.end_request_result_path)
 

@@ -168,6 +168,15 @@ def generate_next_request(success_request, REQUEST_ID_INDEX, ARRIVE_TIME_INDEX, 
         request.append(rtl)
         request.append('task2')
         return request
+    if success_request[TASK_ID_INDEX] == 'task2':
+        arrive_time = success_request[WAIT_TIME_INDEX] + success_request[ARRIVE_TIME_INDEX] + 3
+        rtl = success_request[RTL_INDEX]
+        request = []
+        request.append(success_request[REQUEST_ID_INDEX]+'-1')
+        request.append(arrive_time)
+        request.append(rtl)
+        request.append('task3')
+        return request
     return []
 
 
@@ -187,12 +196,12 @@ def concurrent_request_num_per_second_list_to_concurrent_request_num(
             request.append(str(uuid.uuid1()))
             request.append(i)
             # request.append(np.random.choice(rtl_list))
-            rtl_float = random.gauss(5, 1)
+            rtl_float = random.gauss(10, 1)
             rtl_int = int(rtl_float + 0.5)
-            if rtl_int < 1:
-                rtl_int = 1
-            if rtl_int > 10:
-                rtl_int = 10
+            if rtl_int < 0:
+                rtl_int = 0
+            if rtl_int > 20:
+                rtl_int = 20
             request.append(rtl_int)
             request_list.append(request)
 
