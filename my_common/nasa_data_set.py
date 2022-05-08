@@ -21,8 +21,8 @@ df = df.groupby('datetime').sum()
 # similar to paper: Stochastic Resource Provisioning for
 #                   Containerized Multi-Tier Web Services in Clouds
 # sub_df = df['1998-06-02 12:00:01':'1998-06-04 00:00:00']
-# sub_df = df['1998-06-30 08:00:01':'1998-06-30 18:00:00']
-sub_df = df['1995-07-01 00:00:00':'1995-07-03 00:00:00']
+sub_df = df['1995-07-01 00:00:01':'1995-07-01 01:00:00']
+# sub_df = df['1995-07-01 00:00:00':'1995-07-03 00:00:00']
 
 sns.set()
 
@@ -34,6 +34,7 @@ scaled_sub_df = (sub_df / sub_df['view'].max() *
 scaled_sub_df['view'] = scaled_sub_df['view'].apply(lambda x: int(x))
 
 print(np.mean(scaled_sub_df['view']))
+print(np.sum(scaled_sub_df['view']))
 scaled_sub_df.plot()
 plt.savefig('nasa_sample.png')
 plt.show()
@@ -41,6 +42,5 @@ plt.show()
 concurrent_request_num_per_second_list = []
 for i in range(len(scaled_sub_df.index)):
     concurrent_request_num_per_second_list.append(scaled_sub_df['view'][i])
-concurrent_request_num_per_second_list_to_concurrent_request_num(
-    concurrent_request_num_per_second_list)
-print(scaled_sub_df['view'].values)
+
+concurrent_request_num_per_second_list_to_concurrent_request_num(concurrent_request_num_per_second_list)

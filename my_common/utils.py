@@ -155,33 +155,44 @@ def del_empty_dir(*paths):
                 os.removedirs(os.path.join(path, dir))
 
 
-def concurrent_request_num_per_second_list_to_concurrent_request_num(
-        concurrent_request_num_per_second_list):
+def concurrent_request_num_per_second_list_to_concurrent_request_num(concurrent_request_num_per_second_list):
+    print(concurrent_request_num_per_second_list)
+    print(type(concurrent_request_num_per_second_list))
     import uuid
     import csv
-    # 先造只有rtl1 和rtl3
-    rtl_list = [1,10]
 
     request_list = []
-    for i in range(len(concurrent_request_num_per_second_list)):
-        request_sum_the_second = concurrent_request_num_per_second_list[i]
-        for j in range(request_sum_the_second):
-            # [request_id, arrive_time, rtl]
-            request = []
-            request.append(str(uuid.uuid1()))
-            request.append(i)
-            # request.append(np.random.choice(rtl_list))
-            rtl_float = random.gauss(10, 1)
-            rtl_int = int(rtl_float + 0.5)
-            if rtl_int < 0:
-                rtl_int = 0
-            if rtl_int > 20:
-                rtl_int = 20
-            request.append(rtl_int)
-            request_list.append(request)
+    rtl_and_request_id_list=[]
+    with open('../gatling-charts-highcharts-bundle-3.6.1/user-files/simulations/concurrent_request_num.csv', 'w', newline='') as f:
+        f_csv = csv.writer(f)
+        for i in range(len(concurrent_request_num_per_second_list)):
+            request_sum_the_second = concurrent_request_num_per_second_list[i]
+            f_csv.writerow([request_sum_the_second])
+            for j in range(request_sum_the_second):
+                # [request_id, arrive_time, rtl]
+                request = []
+                request_id=str(uuid.uuid1())
+                request.append(request_id)
+                request.append(i)
+                # request.append(np.random.choice(rtl_list))
+                rtl_float = random.gauss(10, 1)
+                rtl_int = int(rtl_float + 0.5)
+                if rtl_int < 0:
+                    rtl_int = 0
+                if rtl_int > 20:
+                    rtl_int = 20
+                request.append(rtl_int)
+                request_list.append(request)
+                rtl_and_request_id_list.append([rtl_int,request_id])
+
 
     headers = ['request_id', 'arrive_time', 'rtl']
     with open('concurrent_request_num.csv', 'w', newline='') as f:
         f_csv = csv.writer(f)
         f_csv.writerow(headers)
         f_csv.writerows(request_list)
+
+    with open('../gatling-charts-highcharts-bundle-3.6.1/user-files/rtl_and_request_id.csv', 'w', newline='') as f:
+        f_csv = csv.writer(f)
+        f_csv.writerow(['rtl','request_id'])
+        f_csv.writerows(rtl_and_request_id_list)

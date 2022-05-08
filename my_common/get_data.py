@@ -16,7 +16,8 @@ def get_arrive_time_request_dic(arrive_time_index):
     data = pd.read_csv(filename, header=0)
     for i in range(0, len(data)):
         request_in_dic = [
-            data.loc[i, 'request_id'], data.loc[i, 'arrive_time'],
+            data.loc[i, 'request_id'], 
+            data.loc[i, 'arrive_time'],
             data.loc[i, 'rtl']
         ]
         new_arrive_request_in_dic.append(request_in_dic)

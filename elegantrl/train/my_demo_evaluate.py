@@ -70,7 +70,7 @@ def evaluate_agent():
     agent = AgentPPO
     args = Arguments(agent, env=env)
     act = agent(args.net_dim, env.state_dim, env.action_dim).act
-    actor_path = 'RequestEnvNoSim_PPO_0/actor_10163472_00218.798.pth'
+    actor_path = 'RequestEnvNoSim0.8_PPO_0/actor_01561000_06050.265.pth'
     act.load_state_dict(
         torch.load(actor_path, map_location=lambda storage, loc: storage))
 
