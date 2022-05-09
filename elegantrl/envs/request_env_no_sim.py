@@ -144,14 +144,16 @@ class RequestEnvNoSim:
         # submit request
         # action=(从剩余时间为0的请求中提交的请求个数, 从剩余时间为1的请求中提交的请求个数,...,从剩余时间为5的请求中提交的请求个数)
         for remaining_time in range(self.action_dim):
+            # 提交任务
+
+
             for j in range(int(action[remaining_time])):
                 # time_stamp = time.time()
                 submit_index = np.random.choice(
                     self.active_request_group_by_remaining_time_list[remaining_time].__len__())
                 success_request = list(self.active_request_group_by_remaining_time_list[remaining_time][submit_index])
                 # 把提交的任务从active_request_list中删除
-                del self.active_request_group_by_remaining_time_list[
-                    remaining_time][submit_index]
+                del self.active_request_group_by_remaining_time_list[remaining_time][submit_index]
                 success_request[WAIT_TIME_INDEX] = self.t - success_request[ARRIVE_TIME_INDEX]
                 self.success_request_list.append(success_request)
 
