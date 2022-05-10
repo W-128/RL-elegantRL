@@ -112,7 +112,7 @@ def evaluate_agent():
             else:
                 rtl_avg_wait_time_dic[rtl].append(np.mean(rtl_wait_time_dic[rtl]))
 
-    for rtl in [7, 10, 13]:
+    for rtl in rtl_list:
         mask = np.isfinite(rtl_avg_wait_time_dic[rtl])
         line, = plt.plot(np.array(x)[mask], np.array(rtl_avg_wait_time_dic[rtl])[mask], ls="--", lw=1)
         plt.plot(x, rtl_avg_wait_time_dic[rtl], color=line.get_color(), lw=1.5, label=rtl)

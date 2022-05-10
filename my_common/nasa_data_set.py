@@ -29,8 +29,7 @@ sns.set()
 # Scaling the number of requests to another maximum
 # 放缩到最大流量为scaled_max
 scaled_max = 100
-scaled_sub_df = (sub_df / sub_df['view'].max() *
-                 scaled_max).apply(lambda x: round(x))
+scaled_sub_df = (sub_df / sub_df['view'].max() * scaled_max).apply(lambda x: round(x))
 scaled_sub_df['view'] = scaled_sub_df['view'].apply(lambda x: int(x))
 
 print(np.mean(scaled_sub_df['view']))
@@ -41,6 +40,5 @@ plt.show()
 concurrent_request_num_per_second_list = []
 for i in range(len(scaled_sub_df.index)):
     concurrent_request_num_per_second_list.append(scaled_sub_df['view'][i])
-concurrent_request_num_per_second_list_to_concurrent_request_num(
-    concurrent_request_num_per_second_list)
+concurrent_request_num_per_second_list_to_concurrent_request_num(concurrent_request_num_per_second_list)
 print(scaled_sub_df['view'].values)

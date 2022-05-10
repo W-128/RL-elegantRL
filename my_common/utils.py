@@ -17,7 +17,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import seaborn as sns
 import random
-
+import math
 from matplotlib.font_manager import FontProperties  # 导入字体模块
 
 import sys
@@ -104,7 +104,7 @@ def plot_waiting_time_and_require_time(success_request_dic_key_is_end_time, rtl_
             else:
                 rtl_avg_wait_time_dic[rtl].append(np.mean(rtl_wait_time_dic[rtl]))
 
-    for rtl in [7, 10, 13]:
+    for rtl in rtl_list:
         mask = np.isfinite(rtl_avg_wait_time_dic[rtl])
         line, = plt.plot(np.array(x)[mask], np.array(rtl_avg_wait_time_dic[rtl])[mask], ls="--", lw=1)
         plt.plot(x, rtl_avg_wait_time_dic[rtl], color=line.get_color(), lw=1.5, label=rtl)
@@ -179,26 +179,27 @@ def generate_next_request(success_request):
 def concurrent_request_num_per_second_list_to_concurrent_request_num(concurrent_request_num_per_second_list):
     import uuid
     import csv
-    # 先造只有rtl1 和rtl3
-    rtl_list = [1, 10]
+    rtl_dic = {'1': 0.1, '10': 0.8, '20': 0.1}
 
     request_list = []
     for i in range(len(concurrent_request_num_per_second_list)):
         request_sum_the_second = concurrent_request_num_per_second_list[i]
-        for j in range(request_sum_the_second):
-            # [request_id, arrive_time, rtl]
-            request = []
-            request.append(str(uuid.uuid1()))
-            request.append(i)
-            # request.append(np.random.choice(rtl_list))
-            rtl_float = random.gauss(10, 1)
-            rtl_int = int(rtl_float + 0.5)
-            if rtl_int < 0:
-                rtl_int = 0
-            if rtl_int > 20:
-                rtl_int = 20
-            request.append(rtl_int)
-            request_list.append(request)
+        rtl_request_num_dic = {}
+        used_request_sum_the_second = 0
+        for rtl in rtl_dic:
+            rtl_request_num = math.floor(request_sum_the_second * rtl_dic[rtl])
+            rtl_request_num_dic[rtl] = rtl_request_num
+            used_request_sum_the_second += rtl_request_num
+        if used_request_sum_the_second < request_sum_the_second:
+            rtl_request_num_dic['10'] += request_sum_the_second - used_request_sum_the_second
+        for rtl in rtl_request_num_dic:
+            for j in range(rtl_request_num_dic[rtl]):
+                # [request_id, arrive_time, rtl]
+                request = []
+                request.append(str(uuid.uuid1()))
+                request.append(i)
+                request.append(rtl)
+                request_list.append(request)
 
     headers = ['request_id', 'arrive_time', 'rtl']
     with open('concurrent_request_num.csv', 'w', newline='') as f:
