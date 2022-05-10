@@ -327,11 +327,18 @@ class RequestEnvNoSim:
                 more_provision_request_num += 1
         return float(more_provision_request_num) / self.all_request_num
 
-    def get_more_provision_sum(self):
+    def get_more_provision_degree(self):
         more_provision_list = []
         for success_request in self.success_request_list:
             more_provision_list.append(
                 float(success_request['rtl'] - success_request['wait_time']) / success_request['rtl'])
+        # more_provision_list = more_provision_list + [0] * len(self.fail_request_list)
+        return np.mean(more_provision_list)
+
+    def get_more_provision_mean(self):
+        more_provision_list = []
+        for success_request in self.success_request_list:
+            more_provision_list.append(success_request['rtl'] - success_request['wait_time'])
         more_provision_list = more_provision_list + [0] * len(self.fail_request_list)
         return np.mean(more_provision_list)
 

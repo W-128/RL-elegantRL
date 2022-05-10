@@ -45,8 +45,11 @@ class RequestEnvNoSimWrapper():
     def get_success_rate(self):
         return self.env.get_success_rate()
 
-    def get_more_provision_sum(self):
-        return self.env.get_more_provision_sum()
+    def get_more_provision_degree(self):
+        return self.env.get_more_provision_degree()
+
+    def get_more_provision_mean(self):
+        return self.env.get_more_provision_mean()
 
     def get_more_than_threshold_rate(self):
         return self.env.get_more_than_threshold_rate()
@@ -72,7 +75,7 @@ def evaluate_agent():
     agent = AgentPPO
     args = Arguments(agent, env=env)
     act = agent(args.net_dim, env.state_dim, env.action_dim).act
-    actor_path = 'RequestEnvNoSim0.8_PPO_0/actor_04775806_06131.337.pth'
+    actor_path = 'RequestEnvNoSim0.8_PPO_0/actor_00926498_06079.176.pth'
     act.load_state_dict(torch.load(actor_path, map_location=lambda storage, loc: storage))
 
     eval_times = 4
@@ -82,13 +85,15 @@ def evaluate_agent():
     ]
     r_s_success_rate_more_provision_variance_more_than_threshold_rate_sla_violate_ary = np.array(
         r_s_success_rate_more_provision_variance_more_than_threshold_rate_sla_violate_ary, dtype=np.float32)
-    r_avg, s_avg, success_rate_avg, more_provision_sum_avg, more_provision_rate_avg, variance_avg, more_than_threshold_rate_avg = r_s_success_rate_more_provision_variance_more_than_threshold_rate_sla_violate_ary.mean(
+    r_avg, s_avg, success_rate_avg, more_provision_degree_avg, more_provision_rate_avg, more_provision_mean_avg, variance_avg, more_than_threshold_rate_avg = r_s_success_rate_more_provision_variance_more_than_threshold_rate_sla_violate_ary.mean(
         axis=0)  # average of episode return and episode step
 
     print(
-        "奖励平均值：{:.1f}, 成功率平均值：{:.1f}%, 超供程度平均值：{:.1f}%, 超供率平均值：{:.1f}%, 提交量大于阈值的概率：{:.5f}%, 方差平均值：{:.1f}, 步数平均值：{:.1f}".
-        format(r_avg, success_rate_avg, more_provision_sum_avg, more_provision_rate_avg, more_than_threshold_rate_avg,
-               variance_avg, s_avg))
+        "奖励平均值：{:.1f}, 成功率平均值：{:.1f}%, 超供率平均值：{:.1f}%, 超供程度平均值：{:.1f}%, 超供mean平均值：{:.1f}, 提交量大于阈值的概率：{:.5f}%, 方差平均值：{:.1f}, 步数平均值：{:.1f}"
+        .format(r_avg, success_rate_avg, more_provision_rate_avg, more_provision_degree_avg, more_provision_mean_avg,
+                more_than_threshold_rate_avg, variance_avg, s_avg))
+
+    env.print_wait_time_avg()
 
     success_request_dic_key_is_end_time, rtl_list = env.get_success_request_dic_key_is_end_time_and_rtl_list()
     sns.set()

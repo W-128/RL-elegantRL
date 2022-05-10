@@ -33,8 +33,7 @@ class Evaluator:  # [ElegantRL.2022.01.01]
                 f"{'expR':>8}{'objC':>7}{'etc.':>7}",
                 file=f)
 
-    def evaluate_save_and_plot(self, act, steps, r_exp,
-                               log_tuple) -> (bool, bool):  # 2021-09-09
+    def evaluate_save_and_plot(self, act, steps, r_exp, log_tuple) -> (bool, bool):  # 2021-09-09
         self.total_step += steps  # update total training steps
 
         if time.time() - self.eval_time < self.eval_gap:
@@ -43,27 +42,18 @@ class Evaluator:  # [ElegantRL.2022.01.01]
         else:
             self.eval_time = time.time()
             """evaluate first time"""
-            rewards_steps_list = [
-                get_episode_return_and_step(self.eval_env, act)
-                for _ in range(self.eval_times1)
-            ]
+            rewards_steps_list = [get_episode_return_and_step(self.eval_env, act) for _ in range(self.eval_times1)]
             rewards_steps_ary = np.array(rewards_steps_list, dtype=np.float32)
 
-            r_avg, s_avg = rewards_steps_ary.mean(
-                axis=0)  # average of episode return and episode step
+            r_avg, s_avg = rewards_steps_ary.mean(axis=0)  # average of episode return and episode step
             """evaluate second time"""
             if r_avg > self.r_max:
-                rewards_steps_list.extend([
-                    get_episode_return_and_step(self.eval_env, act)
-                    for _ in range(self.eval_times2)
-                ])
-                rewards_steps_ary = np.array(rewards_steps_list,
-                                             dtype=np.float32)
-                r_avg, s_avg = rewards_steps_ary.mean(
-                    axis=0)  # average of episode return and episode step
+                rewards_steps_list.extend(
+                    [get_episode_return_and_step(self.eval_env, act) for _ in range(self.eval_times2)])
+                rewards_steps_ary = np.array(rewards_steps_list, dtype=np.float32)
+                r_avg, s_avg = rewards_steps_ary.mean(axis=0)  # average of episode return and episode step
 
-            r_std, s_std = rewards_steps_ary.std(
-                axis=0)  # standard dev. of episode return and episode step
+            r_std, s_std = rewards_steps_ary.std(axis=0)  # standard dev. of episode return and episode step
 
             # if self.save_s_tensor_list_and_a_tensor_list == 0:
             #     make_dir('./episode_evaluate')
@@ -79,44 +69,32 @@ class Evaluator:  # [ElegantRL.2022.01.01]
             if if_save:  # save checkpoint with highest episode return
                 self.r_max = r_avg  # update max reward (episode return)
 
-                act_path = (
-                    f"{self.cwd}/actor_{self.total_step:08}_{self.r_max:09.3f}.pth"
-                )
-                torch.save(act.state_dict(),
-                           act_path)  # save policy network in *.pth
-                with open('./result' + str(self.args.gamma) + '.txt',
-                          'a+') as f:
-                    print(
-                        f"{self.agent_id:<3}{self.total_step:8.2e}{self.r_max:8.2f} |",
-                        file=f)  # save policy and print
+                act_path = (f"{self.cwd}/actor_{self.total_step:08}_{self.r_max:09.3f}.pth")
+                torch.save(act.state_dict(), act_path)  # save policy network in *.pth
+                with open('./result' + str(self.args.gamma) + '.txt', 'a+') as f:
+                    print(f"{self.agent_id:<3}{self.total_step:8.2e}{self.r_max:8.2f} |",
+                          file=f)  # save policy and print
                     """打印现在的无超阈值惩罚奖励以及各个评估指标"""
-                    print(
-                        "成功率：{:.1f}%, 提交量大于阈值的概率：{:.5f}%, 超供率：{:.1f}%, 超供程度：{:.1f}%, 方差：{:.1f}"
-                            .format(
-                            self.eval_env.get_success_rate() * 100,
-                            self.eval_env.get_more_than_threshold_rate() * 100,
-                            self.eval_env.get_more_provision_rate() * 100,
-                            self.eval_env.get_more_provision_sum() * 100,
-                            self.eval_env.
-                            get_submit_request_num_per_second_variance()),
-                        file=f)
+                    print("成功率：{:.1f}%, 提交量大于阈值的概率：{:.5f}%, 超供率：{:.1f}%, 超供程度：{:.1f}%, 超供平均值：{:.1f}, 方差：{:.1f}".format(
+                        self.eval_env.get_success_rate() * 100,
+                        self.eval_env.get_more_than_threshold_rate() * 100,
+                        self.eval_env.get_more_provision_rate() * 100,
+                        self.eval_env.get_more_provision_degree() * 100, self.eval_env.get_more_provision_mean(),
+                        self.eval_env.get_submit_request_num_per_second_variance()),
+                          file=f)
             """record the training information"""
-            self.recorder.append((self.total_step, r_avg, r_std, r_exp,
-                                  *log_tuple))  # update recorder
+            self.recorder.append((self.total_step, r_avg, r_std, r_exp, *log_tuple))  # update recorder
             """print some information to Terminal"""
-            if_reach_goal = bool(
-                self.r_max > self.target_return)  # check if_reach_goal
+            if_reach_goal = bool(self.r_max > self.target_return)  # check if_reach_goal
             if if_reach_goal and self.used_time is None:
                 self.used_time = int(time.time() - self.start_time)
-                print(
-                    f"{'ID':<3}{'Step':>8}{'TargetR':>8} |"
-                    f"{'avgR':>8}{'stdR':>7}{'avgS':>7}{'stdS':>6} |"
-                    f"{'UsedTime':>8}  ########\n"
-                    f"{self.agent_id:<3}{self.total_step:8.2e}{self.target_return:8.2f} |"
-                    f"{r_avg:8.2f}{r_std:7.1f}{s_avg:7.0f}{s_std:6.0f} |"
-                    f"{self.used_time:>8}  ########")
-            with open('./result' + str(self.args.gamma) + '.txt',
-                      'a+') as f:
+                print(f"{'ID':<3}{'Step':>8}{'TargetR':>8} |"
+                      f"{'avgR':>8}{'stdR':>7}{'avgS':>7}{'stdS':>6} |"
+                      f"{'UsedTime':>8}  ########\n"
+                      f"{self.agent_id:<3}{self.total_step:8.2e}{self.target_return:8.2f} |"
+                      f"{r_avg:8.2f}{r_std:7.1f}{s_avg:7.0f}{s_std:6.0f} |"
+                      f"{self.used_time:>8}  ########")
+            with open('./result' + str(self.args.gamma) + '.txt', 'a+') as f:
                 print(
                     f"{self.agent_id:<3}{self.total_step:8.2e}{self.r_max:8.2f} |"
                     f"{r_avg:8.2f}{r_std:7.1f}{s_avg:7.0f}{s_std:6.0f} |"
@@ -133,9 +111,7 @@ class Evaluator:  # [ElegantRL.2022.01.01]
             """draw plot and save as figure"""
             train_time = int(time.time() - self.start_time)
             total_step = int(self.recorder[-1][0])
-            save_title = (
-                f"step_time_maxR_{int(total_step)}_{int(train_time)}_{self.r_max:.3f}"
-            )
+            save_title = (f"step_time_maxR_{int(total_step)}_{int(train_time)}_{self.r_max:.3f}")
 
             save_learning_curve(self.recorder, self.cwd, save_title)
 
@@ -146,16 +122,14 @@ class Evaluator:  # [ElegantRL.2022.01.01]
             np.save(self.recorder_path, self.recorder)
         elif os.path.exists(self.recorder_path):
             recorder = np.load(self.recorder_path)
-            self.recorder = [tuple(i)
-                             for i in recorder]  # convert numpy to list
+            self.recorder = [tuple(i) for i in recorder]  # convert numpy to list
             self.total_step = self.recorder[-1][0]
 
 
 """util"""
 
 
-def get_episode_return_and_step(env,
-                                act) -> (float, int):  # [ElegantRL.2022.01.01]
+def get_episode_return_and_step(env, act) -> (float, int):  # [ElegantRL.2022.01.01]
     """Usage
     eval_times = 4
     net_dim = 2 ** 7
@@ -171,20 +145,17 @@ def get_episode_return_and_step(env,
     """
     max_step = env.max_step
     if_discrete = env.if_discrete
-    device = next(
-        act.parameters()).device  # net.parameters() is a Python generator.
+    device = next(act.parameters()).device  # net.parameters() is a Python generator.
 
     state = env.reset()
     episode_step = None
     episode_return = 0.0  # sum of rewards in an episode
     for episode_step in range(max_step):
-        s_tensor = torch.as_tensor(state, dtype=torch.float32,
-                                   device=device).unsqueeze(0)
+        s_tensor = torch.as_tensor(state, dtype=torch.float32, device=device).unsqueeze(0)
         a_tensor = act(s_tensor)
         if if_discrete:
             a_tensor = a_tensor.argmax(dim=1)
-        action = (a_tensor.detach().cpu().numpy()[0]
-        )  # not need detach(), because using torch.no_grad() outside
+        action = (a_tensor.detach().cpu().numpy()[0])  # not need detach(), because using torch.no_grad() outside
         state, reward, done, _ = env.step(action)
         episode_return += reward
         if done:
@@ -194,8 +165,7 @@ def get_episode_return_and_step(env,
     return episode_return, episode_step
 
 
-def get_episode_s_tensor_list_and_a_tensor_list(
-        env, act) -> (float, int):  # [ElegantRL.2022.01.01]
+def get_episode_s_tensor_list_and_a_tensor_list(env, act) -> (float, int):  # [ElegantRL.2022.01.01]
     """Usage
     eval_times = 4
     net_dim = 2 ** 7
@@ -211,8 +181,7 @@ def get_episode_s_tensor_list_and_a_tensor_list(
     """
     max_step = env.max_step
     if_discrete = env.if_discrete
-    device = next(
-        act.parameters()).device  # net.parameters() is a Python generator.
+    device = next(act.parameters()).device  # net.parameters() is a Python generator.
 
     state = env.reset()
     episode_step = None
@@ -222,14 +191,12 @@ def get_episode_s_tensor_list_and_a_tensor_list(
     for episode_step in range(max_step):
         s_a = []
         s_a.append(state)
-        s_tensor = torch.as_tensor(state, dtype=torch.float32,
-                                   device=device).unsqueeze(0)
+        s_tensor = torch.as_tensor(state, dtype=torch.float32, device=device).unsqueeze(0)
         a_tensor = act(s_tensor)
 
         if if_discrete:
             a_tensor = a_tensor.argmax(dim=1)
-        action = (a_tensor.detach().cpu().numpy()[0]
-        )  # not need detach(), because using torch.no_grad() outside
+        action = (a_tensor.detach().cpu().numpy()[0])  # not need detach(), because using torch.no_grad() outside
         s_a.append(action)
         state, reward, done, _ = env.step(action)
         episode_return += reward
@@ -242,24 +209,20 @@ def get_episode_s_tensor_list_and_a_tensor_list(
 
 
 def get_episode_return_and_step_and_success_rate_and_more_provision_and_variance_and_more_than_threshold_rate(
-        env, act
-) -> (float, int, float, float, float, float, float):  # [ElegantRL.2022.01.01]
+        env, act) -> (float, int, float, float, float, float, float):  # [ElegantRL.2022.01.01]
     max_step = env.max_step
     if_discrete = env.if_discrete
-    device = next(
-        act.parameters()).device  # net.parameters() is a Python generator.
+    device = next(act.parameters()).device  # net.parameters() is a Python generator.
 
     state = env.reset()
     episode_step = None
     episode_return = 0.0  # sum of rewards in an episode
     for episode_step in range(max_step):
-        s_tensor = torch.as_tensor(state, dtype=torch.float32,
-                                   device=device).unsqueeze(0)
+        s_tensor = torch.as_tensor(state, dtype=torch.float32, device=device).unsqueeze(0)
         a_tensor = act(s_tensor)
         if if_discrete:
             a_tensor = a_tensor.argmax(dim=1)
-        action = (a_tensor.detach().cpu().numpy()[0]
-        )  # not need detach(), because using torch.no_grad() outside
+        action = (a_tensor.detach().cpu().numpy()[0])  # not need detach(), because using torch.no_grad() outside
         state, reward, done, _ = env.step(action)
         episode_return += reward
         if done:
@@ -267,18 +230,19 @@ def get_episode_return_and_step_and_success_rate_and_more_provision_and_variance
     episode_return = getattr(env, "episode_return", episode_return)
     episode_step += 1
     episode_success_rate = env.get_success_rate() * 100
-    episode_more_provision_sum = env.get_more_provision_sum() * 100
+    episode_more_provision_degree = env.get_more_provision_degree() * 100
     episode_more_provision_rate = env.get_more_provision_rate() * 100
+    episode_more_provision_mean = env.get_more_provision_mean()
     episode_variance = env.get_submit_request_num_per_second_variance()
     episode_more_than_threshold_rate = env.get_more_than_threshold_rate() * 100
-    return episode_return, episode_step, episode_success_rate, episode_more_provision_sum, episode_more_provision_rate, episode_variance, episode_more_than_threshold_rate
+    return episode_return, episode_step, episode_success_rate, episode_more_provision_degree, episode_more_provision_rate, episode_more_provision_mean, episode_variance, episode_more_than_threshold_rate
 
 
 def save_learning_curve(
-        recorder=None,
-        cwd=".",
-        save_title="learning curve",
-        fig_name="plot_learning_curve.jpg",
+    recorder=None,
+    cwd=".",
+    save_title="learning curve",
+    fig_name="plot_learning_curve.jpg",
 ):
     if recorder is None:
         recorder = np.load(f"{cwd}/recorder.npy")
@@ -319,11 +283,7 @@ def save_learning_curve(
     color0 = "lightcoral"
     ax00.set_ylabel("Episode Return", color=color0)
     ax00.plot(steps, r_avg, label="Episode Return", color=color0)
-    ax00.fill_between(steps,
-                      r_avg - r_std,
-                      r_avg + r_std,
-                      facecolor=color0,
-                      alpha=0.3)
+    ax00.fill_between(steps, r_avg - r_std, r_avg + r_std, facecolor=color0, alpha=0.3)
     ax00.grid()
     """axs[1]"""
     ax10 = axs[1]
@@ -353,9 +313,7 @@ def save_learning_curve(
     """plot save"""
     plt.title(save_title, y=2.3)
     plt.savefig(f"{cwd}/{fig_name}")
-    plt.close(
-        "all"
-    )  # avoiding warning about too many open figures, rcParam `figure.max_open_warning`
+    plt.close("all")  # avoiding warning about too many open figures, rcParam `figure.max_open_warning`
     # plt.show()  # if use `mpl.use('Agg')` to draw figures without GUI, then plt can't plt.show()
 
 
@@ -385,30 +343,21 @@ def demo_evaluator_actor_pth():
 
     actor_path = "./LunarLanderContinuous-v2_PPO_1/actor.pth"
     eval_times = 4
-    net_dim = 2 ** 7
+    net_dim = 2**7
     """init"""
     env = build_env(env_func=env_func, env_args=env_args)
     act = agent(net_dim, env.state_dim, env.action_dim, gpu_id=gpu_id).act
-    act.load_state_dict(
-        torch.load(actor_path, map_location=lambda storage, loc: storage))
+    act.load_state_dict(torch.load(actor_path, map_location=lambda storage, loc: storage))
     """evaluate"""
-    r_s_ary = [
-        get_episode_return_and_step(env, act) for _ in range(eval_times)
-    ]
+    r_s_ary = [get_episode_return_and_step(env, act) for _ in range(eval_times)]
     r_s_ary = np.array(r_s_ary, dtype=np.float32)
-    r_avg, s_avg = r_s_ary.mean(
-        axis=0)  # average of episode return and episode step
+    r_avg, s_avg = r_s_ary.mean(axis=0)  # average of episode return and episode step
 
     print("r_avg, s_avg", r_avg, s_avg)
     return r_avg, s_avg
 
 
-def demo_evaluate_actors(dir_path,
-                         gpu_id,
-                         agent,
-                         env_args,
-                         eval_times=2,
-                         net_dim=128):
+def demo_evaluate_actors(dir_path, gpu_id, agent, env_args, eval_times=2, net_dim=128):
     import gym
     from elegantrl.train.config import build_env
 
@@ -441,14 +390,10 @@ def demo_evaluate_actors(dir_path,
     for act_name in tqdm(act_names):
         act_path = f"{dir_path}/{act_name}"
 
-        act.load_state_dict(
-            torch.load(act_path, map_location=lambda storage, loc: storage))
-        r_s_ary = [
-            get_episode_return_and_step(env, act) for _ in range(eval_times)
-        ]
+        act.load_state_dict(torch.load(act_path, map_location=lambda storage, loc: storage))
+        r_s_ary = [get_episode_return_and_step(env, act) for _ in range(eval_times)]
         r_s_ary = np.array(r_s_ary, dtype=np.float32)
-        r_avg, s_avg = r_s_ary.mean(
-            axis=0)  # average of episode return and episode step
+        r_avg, s_avg = r_s_ary.mean(axis=0)  # average of episode return and episode step
 
         step = int(act_name[6:15])
 
@@ -476,7 +421,7 @@ def run():
             "action_dim": 2,
             "if_discrete": False,
             "target_return": 200,
-            "eval_times": 2 ** 4,
+            "eval_times": 2**4,
             "id": "LunarLanderContinuous-v2",
         },
         {
@@ -487,7 +432,7 @@ def run():
             "action_dim": 4,
             "if_discrete": False,
             "target_return": 300,
-            "eval_times": 2 ** 3,
+            "eval_times": 2**3,
             "id": "BipedalWalker-v3",
         },
     ][flag_id]
@@ -507,10 +452,7 @@ def run():
     step_epi_r_s_ary = list()
 
     cwd_path = "."
-    ary_names = [
-        name for name in os.listdir(".")
-        if name.find(env_name) >= 0 and name[-4:] == ".txt"
-    ]
+    ary_names = [name for name in os.listdir(".") if name.find(env_name) >= 0 and name[-4:] == ".txt"]
     for ary_name in ary_names:
         ary_path = f"{cwd_path}/{ary_name}"
         ary = np.loadtxt(ary_path)
@@ -562,11 +504,7 @@ def run():
     if if_show_episode_step:
         ax_twin = ax.twinx()
         plot_y_step = [item[4] for item in plot_x_y_up_dw_step]
-        ax_twin.fill_between(plot_x,
-                             0,
-                             plot_y_step,
-                             facecolor=color1,
-                             alpha=0.3)
+        ax_twin.fill_between(plot_x, 0, plot_y_step, facecolor=color1, alpha=0.3)
         ax_twin.set_ylabel("Episode Step", color=color1)
         ax_twin.tick_params(axis="y", labelcolor=color1)
         ax_twin.set_ylim(0, np.max(plot_y_step) * 2)

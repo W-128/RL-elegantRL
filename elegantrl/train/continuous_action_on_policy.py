@@ -11,8 +11,6 @@ from elegantrl.train.run import *
 from elegantrl.agents import *
 from elegantrl.train.config import Arguments
 from elegantrl.envs.request_env_no_sim import RequestEnvNoSim
-from elegantrl.train.evaluator import \
-    get_episode_return_and_step_and_success_rate_and_more_provision_and_variance_and_more_than_threshold_rate
 """custom env"""
 
 
@@ -22,32 +20,30 @@ class RequestEnvNoSimWrapper():
         self.env = RequestEnvNoSim()
         self.env_num = 1
         self.env_name = 'RequestEnvNoSim' + str(gamma)
-        self.max_step = len(
-            self.env.new_arrive_request_in_dic
-        ) + self.env.state_dim  # 每个episode的最大步数（就是从 env.reset() 开始到 env.step()返回 done=True 的步数上限）
+        self.max_step = len(self.env.new_arrive_request_in_dic
+                            ) + self.env.state_dim  # 每个episode的最大步数（就是从 env.reset() 开始到 env.step()返回 done=True 的步数上限）
         self.state_dim = self.env.state_dim  # feature number of state
         self.action_dim = self.env.action_dim  # feature number of action
         self.target_return = 6300
         self.if_discrete = False
 
     def reset(self):
-        reset_state = np.asarray(self.env.reset(),
-                                 dtype=np.float32) / self.env.threshold
+        reset_state = np.asarray(self.env.reset(), dtype=np.float32) / self.env.threshold
         return reset_state
 
     def step(self, action: np.ndarray):
         # I suggest to set action space as (-1, +1) when you design your own env.
-        state, reward, done, info_dict = self.env.step(
-            action)  # state, reward, done, info_dict
-        return np.asarray(
-            state,
-            dtype=np.float32) / self.env.threshold, reward, done, info_dict
+        state, reward, done, info_dict = self.env.step(action)  # state, reward, done, info_dict
+        return np.asarray(state, dtype=np.float32) / self.env.threshold, reward, done, info_dict
 
     def get_success_rate(self):
         return self.env.get_success_rate()
 
-    def get_more_provision_sum(self):
-        return self.env.get_more_provision_sum()
+    def get_more_provision_degree(self):
+        return self.env.get_more_provision_degree()
+
+    def get_more_provision_mean(self):
+        return self.env.get_more_provision_mean()
 
     def get_more_than_threshold_rate(self):
         return self.env.get_more_than_threshold_rate()
