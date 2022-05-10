@@ -5,6 +5,7 @@ ARRIVE_TIME_INDEX = 1
 
 
 class RandomChoose:
+
     def __init__(self, action_dim):
         self.action_dim = action_dim  # 总的动作个数
 
@@ -25,6 +26,7 @@ class RandomChoose:
 
 
 class EDF:
+
     def __init__(self, action_dim):
         self.action_dim = action_dim  # 总的动作个数
 
@@ -35,6 +37,7 @@ class EDF:
 
 
 class EDFSubmitThreshold:
+
     def __init__(self, action_dim):
         self.action_dim = action_dim  # 总的动作个数
 
@@ -56,7 +59,9 @@ class EDFSubmitThreshold:
                     remaining_num = 0
         return action
 
+
 class fifo:
+
     def __init__(self, action_dim):
         self.action_dim = action_dim  # 总的动作个数
 
@@ -65,15 +70,13 @@ class fifo:
         for i in range(len(active_request_group_by_remaining_time_list)):
             for j in range(len(active_request_group_by_remaining_time_list[i])):
                 active_request_list.append(active_request_group_by_remaining_time_list[i][j])
-        active_request_list = sorted(active_request_list, key=lambda i: i[ARRIVE_TIME_INDEX])
+        active_request_list = sorted(active_request_list, key=lambda i: i['arrive_time'])
 
-        submit_request_id_list=[]
+        submit_request_id_list = []
         remaining_num = threshold
         while remaining_num != 0 and len(active_request_list) != 0:
-            submit_request_id_list.append(active_request_list[0][REQUEST_ID_INDEX])
+            submit_request_id_list.append(active_request_list[0]['request_id'])
             del active_request_list[0]
             remaining_num = remaining_num - 1
 
         return submit_request_id_list
-
-

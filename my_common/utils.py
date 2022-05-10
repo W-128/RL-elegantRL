@@ -9,7 +9,9 @@ LastEditTime: 2021-11-30 18:39:19
 Discription:
 Environment:
 '''
+from cProfile import label
 import os
+from statistics import mean
 import numpy as np
 from pathlib import Path
 import matplotlib.pyplot as plt
@@ -30,8 +32,7 @@ def chinese_font():
     ''' 设置中文字体，注意需要根据自己电脑情况更改字体路径，否则还是默认的字体
     '''
     try:
-        font = FontProperties(fname='/System/Library/Fonts/STHeiti Light.ttc',
-                              size=15)  # fname系统字体路径，此处是mac的
+        font = FontProperties(fname='/System/Library/Fonts/STHeiti Light.ttc', size=15)  # fname系统字体路径，此处是mac的
     except:
         font = None
     return font
@@ -42,8 +43,7 @@ def plot_rewards_cn(rewards, ma_rewards, plot_cfg, tag='train'):
     '''
     sns.set()
     plt.figure()
-    plt.title(u"{}环境下{}算法的学习曲线".format(plot_cfg.env_name, plot_cfg.algo_name),
-              fontproperties=chinese_font())
+    plt.title(u"{}环境下{}算法的学习曲线".format(plot_cfg.env_name, plot_cfg.algo_name), fontproperties=chinese_font())
     plt.xlabel(u'回合数', fontproperties=chinese_font())
     plt.plot(rewards)
     plt.plot(ma_rewards)
@@ -59,8 +59,7 @@ def plot_rewards_cn(rewards, ma_rewards, plot_cfg, tag='train'):
 def plot_rewards(rewards, ma_rewards, plot_cfg, tag='train'):
     sns.set()
     plt.figure()  # 创建一个图形实例，方便同时多画几个图
-    plt.title("learning curve on {} of {} for {}".format(
-        plot_cfg.device, plot_cfg.algo_name, plot_cfg.env_name))
+    plt.title("learning curve on {} of {} for {}".format(plot_cfg.device, plot_cfg.algo_name, plot_cfg.env_name))
     plt.xlabel('epsiodes')
     plt.plot(rewards, label='rewards')
     plt.plot(ma_rewards, label='ma rewards')
@@ -73,8 +72,7 @@ def plot_rewards(rewards, ma_rewards, plot_cfg, tag='train'):
 def plot_success_rate(success_rate, plot_cfg, tag='train'):
     sns.set()
     plt.figure()  # 创建一个图形实例，方便同时多画几个图
-    plt.title("learning curve on {} of {} for {}".format(
-        plot_cfg.device, plot_cfg.algo_name, plot_cfg.env_name))
+    plt.title("learning curve on {} of {} for {}".format(plot_cfg.device, plot_cfg.algo_name, plot_cfg.env_name))
     plt.xlabel('epsiodes')
     plt.plot(success_rate, label='success rate')
     plt.legend()
@@ -83,28 +81,36 @@ def plot_success_rate(success_rate, plot_cfg, tag='train'):
     plt.show()
 
 
-def plot_waiting_time_and_require_time(success_request_list,
-                                       waiting_time_index,
-                                       rtl_index,
-                                       plot_cfg,
-                                       tag='train'):
+def plot_waiting_time_and_require_time(success_request_dic_key_is_end_time, rtl_list, plot_cfg, tag='train'):
     sns.set()
     fig = plt.figure()
-    plt.title("more provision {} for {}".format(plot_cfg.algo_name,
-                                                plot_cfg.env_name))
-    plt.xlabel('success request')
-    rtl_dic = {}
-    for success_request in success_request_list:
-        if success_request[rtl_index] not in rtl_dic:
-            rtl_dic[success_request[rtl_index]] = []
-            rtl_dic[success_request[rtl_index]].append(
-                success_request[waiting_time_index])
-        else:
-            rtl_dic[success_request[rtl_index]].append(
-                success_request[waiting_time_index])
-    import random
-    for rtl in rtl_dic:
-        plt.plot(random.sample(rtl_dic[rtl], 100), label=rtl)
+    plt.title("more provision {} for {}".format(plot_cfg.algo_name, plot_cfg.env_name))
+    plt.xlabel('time(second)')
+    x = list(success_request_dic_key_is_end_time.keys())
+    rtl_avg_wait_time_dic = {}
+    # {rtl1:[],rtl2:[]}
+    for rtl in rtl_list:
+        rtl_avg_wait_time_dic[rtl] = []
+    for end_time in success_request_dic_key_is_end_time.keys():
+        rtl_wait_time_dic = {}
+        # {rtl1:[],rtl2:[]}
+        for rtl in rtl_list:
+            rtl_wait_time_dic[rtl] = []
+        for request in success_request_dic_key_is_end_time[end_time]:
+            rtl_wait_time_dic[request['rtl']].append(request['wait_time'])
+        for rtl in rtl_wait_time_dic:
+            if rtl_wait_time_dic[rtl] == []:
+                rtl_avg_wait_time_dic[rtl].append(np.nan)
+            else:
+                rtl_avg_wait_time_dic[rtl].append(np.mean(rtl_wait_time_dic[rtl]))
+
+    for rtl in [7, 10, 13]:
+        mask = np.isfinite(rtl_avg_wait_time_dic[rtl])
+        line, = plt.plot(np.array(x)[mask], np.array(rtl_avg_wait_time_dic[rtl])[mask], ls="--", lw=1)
+        plt.plot(x, rtl_avg_wait_time_dic[rtl], color=line.get_color(), lw=1.5, label=rtl)
+        # 辅助线
+        sup_line = [rtl for i in range(len(x))]
+        plt.plot(x, sup_line, color='black', linestyle='--', linewidth='1')
     plt.legend()
     if plot_cfg.save:
         plt.savefig(plot_cfg.result_path + "{}_more_provision".format(tag))
@@ -155,24 +161,22 @@ def del_empty_dir(*paths):
                 os.removedirs(os.path.join(path, dir))
 
 
-def generate_next_request(success_request, REQUEST_ID_INDEX, ARRIVE_TIME_INDEX, RTL_INDEX, TASK_ID_INDEX,
-                          REMAINING_TIME_INDEX, WAIT_TIME_INDEX):
-    # request_in_dic= [request_id, arrive_time, rtl, task_id]
-    # success_request=[request_id, arrive_time, rtl, task_id, wait_time]
-    if success_request[TASK_ID_INDEX] == 'task1':
-        arrive_time = success_request[WAIT_TIME_INDEX] + success_request[ARRIVE_TIME_INDEX] + 3
-        rtl = success_request[RTL_INDEX]
-        request = []
-        request.append(success_request[REQUEST_ID_INDEX]+'-1')
-        request.append(arrive_time)
-        request.append(rtl)
-        request.append('task2')
+def generate_next_request(success_request):
+    # request={'request_id', 'arrive_time', 'rtl', 'task_id', 'remaining_time'}
+    # success_request{'request_id', 'arrive_time', 'rtl', 'task_id', 'wait_time'}
+    if success_request['task_id'] == 'task1':
+        arrive_time = success_request['wait_time'] + success_request['arrive_time'] + 3
+        rtl = success_request['rtl']
+        request = {}
+        request['request_id'] = success_request['request_id'] + '-1'
+        request['arrive_time'] = arrive_time
+        request['rtl'] = rtl
+        request['task_id'] = 'task2'
         return request
-    return []
+    return {}
 
 
-def concurrent_request_num_per_second_list_to_concurrent_request_num(
-        concurrent_request_num_per_second_list):
+def concurrent_request_num_per_second_list_to_concurrent_request_num(concurrent_request_num_per_second_list):
     import uuid
     import csv
     # 先造只有rtl1 和rtl3

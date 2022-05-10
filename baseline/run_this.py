@@ -10,7 +10,7 @@ from agent import RandomChoose, EDF, EDFSubmitThreshold, fifo
 from train_test import test, test_fifo
 import datetime
 import torch
-from my_common.utils import make_dir
+from my_common.utils import make_dir, plot_waiting_time_and_require_time
 import numpy as np
 from my_common.get_data import get_arrive_time_request_dic
 
@@ -85,7 +85,7 @@ env.action_is_probability = False
 # random_choose_cfg = RandomChooseConfig()
 # make_dir(random_choose_cfg.result_path)  # 创建模型路径的文件夹
 # agent = RandomChoose(env.action_dim)
-# success_request, waiting_time_index, rtl_index = test(random_choose_cfg, env,agent)
+# success_request = test(random_choose_cfg, env,agent)
 # # plot_waiting_time_and_require_time(success_request, waiting_time_index,
 # #                                    rtl_index, random_choose_cfg)
 
@@ -93,20 +93,19 @@ print("==========================================================")
 edf_config = EDFConfig()
 make_dir(edf_config.result_path)  # 创建模型路径的文件夹
 agent = EDF(env.action_dim)
-success_request, waiting_time_index, rtl_index = test(edf_config, env, agent)
-# plot_waiting_time_and_require_time(success_request, waiting_time_index,
-#                                    rtl_index, edf_config)
+success_request_dic_key_is_end_time, rtl_list = test(edf_config, env, agent)
+plot_waiting_time_and_require_time(success_request_dic_key_is_end_time, rtl_list, edf_config)
 
 print("==========================================================")
 edf_submit_threshold_config = EDFSubmitThresholdConfig()
 make_dir(edf_submit_threshold_config.result_path)  # 创建模型路径的文件夹
 agent = EDFSubmitThreshold(env.action_dim)
-success_request, waiting_time_index, rtl_index = test(edf_submit_threshold_config, env, agent)
-# plot_waiting_time_and_require_time(success_request, waiting_time_index,
-#                                    rtl_index, edf_submit_threshold_config)
+success_request_dic_key_is_end_time, rtl_list = test(edf_submit_threshold_config, env, agent)
+plot_waiting_time_and_require_time(success_request_dic_key_is_end_time, rtl_list, edf_submit_threshold_config)
 
 print("==========================================================")
 fifo_config = FIFOConfig()
 make_dir(fifo_config.result_path)  # 创建模型路径的文件夹
 agent = fifo(env.action_dim)
-success_request, waiting_time_index, rtl_index = test_fifo(fifo_config, env, agent)
+success_request_dic_key_is_end_time, rtl_list = test_fifo(fifo_config, env, agent)
+plot_waiting_time_and_require_time(success_request_dic_key_is_end_time, rtl_list, fifo_config)
