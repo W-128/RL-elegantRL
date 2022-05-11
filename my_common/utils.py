@@ -179,7 +179,7 @@ def generate_next_request(success_request):
 def concurrent_request_num_per_second_list_to_concurrent_request_num(concurrent_request_num_per_second_list):
     import uuid
     import csv
-    rtl_dic = {'1': 0.1, '10': 0.8, '20': 0.1}
+    rtl_dic = {'2': 0.1, '7': 0.9}
 
     request_list = []
     for i in range(len(concurrent_request_num_per_second_list)):
@@ -191,7 +191,7 @@ def concurrent_request_num_per_second_list_to_concurrent_request_num(concurrent_
             rtl_request_num_dic[rtl] = rtl_request_num
             used_request_sum_the_second += rtl_request_num
         if used_request_sum_the_second < request_sum_the_second:
-            rtl_request_num_dic['10'] += request_sum_the_second - used_request_sum_the_second
+            rtl_request_num_dic['7'] += request_sum_the_second - used_request_sum_the_second
         for rtl in rtl_request_num_dic:
             for j in range(rtl_request_num_dic[rtl]):
                 # [request_id, arrive_time, rtl]

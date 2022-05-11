@@ -339,8 +339,13 @@ class RequestEnvNoSim:
         more_provision_list = []
         for success_request in self.success_request_list:
             more_provision_list.append(success_request['rtl'] - success_request['wait_time'])
-        more_provision_list = more_provision_list + [0] * len(self.fail_request_list)
-        return np.mean(more_provision_list)
+        return np.sum(more_provision_list) / float(self.all_request_num)
+
+    def get_more_provision_sum(self):
+        more_provision_list = []
+        for success_request in self.success_request_list:
+            more_provision_list.append(success_request['rtl'] - success_request['wait_time'])
+        return float(np.sum(more_provision_list))
 
     def get_success_request(self):
         return self.success_request_list

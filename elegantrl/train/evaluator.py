@@ -233,9 +233,10 @@ def get_episode_return_and_step_and_success_rate_and_more_provision_and_variance
     episode_more_provision_degree = env.get_more_provision_degree() * 100
     episode_more_provision_rate = env.get_more_provision_rate() * 100
     episode_more_provision_mean = env.get_more_provision_mean()
+    episode_more_provision_sum = env.get_more_provision_sum()
     episode_variance = env.get_submit_request_num_per_second_variance()
     episode_more_than_threshold_rate = env.get_more_than_threshold_rate() * 100
-    return episode_return, episode_step, episode_success_rate, episode_more_provision_degree, episode_more_provision_rate, episode_more_provision_mean, episode_variance, episode_more_than_threshold_rate
+    return episode_return, episode_step, episode_success_rate, episode_more_provision_degree, episode_more_provision_rate, episode_more_provision_mean, episode_more_provision_sum, episode_variance, episode_more_than_threshold_rate
 
 
 def save_learning_curve(
