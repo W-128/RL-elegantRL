@@ -30,8 +30,7 @@ def chinese_font():
     ''' 设置中文字体，注意需要根据自己电脑情况更改字体路径，否则还是默认的字体
     '''
     try:
-        font = FontProperties(fname='/System/Library/Fonts/STHeiti Light.ttc',
-                              size=15)  # fname系统字体路径，此处是mac的
+        font = FontProperties(fname='/System/Library/Fonts/STHeiti Light.ttc', size=15)  # fname系统字体路径，此处是mac的
     except:
         font = None
     return font
@@ -42,8 +41,7 @@ def plot_rewards_cn(rewards, ma_rewards, plot_cfg, tag='train'):
     '''
     sns.set()
     plt.figure()
-    plt.title(u"{}环境下{}算法的学习曲线".format(plot_cfg.env_name, plot_cfg.algo_name),
-              fontproperties=chinese_font())
+    plt.title(u"{}环境下{}算法的学习曲线".format(plot_cfg.env_name, plot_cfg.algo_name), fontproperties=chinese_font())
     plt.xlabel(u'回合数', fontproperties=chinese_font())
     plt.plot(rewards)
     plt.plot(ma_rewards)
@@ -59,8 +57,7 @@ def plot_rewards_cn(rewards, ma_rewards, plot_cfg, tag='train'):
 def plot_rewards(rewards, ma_rewards, plot_cfg, tag='train'):
     sns.set()
     plt.figure()  # 创建一个图形实例，方便同时多画几个图
-    plt.title("learning curve on {} of {} for {}".format(
-        plot_cfg.device, plot_cfg.algo_name, plot_cfg.env_name))
+    plt.title("learning curve on {} of {} for {}".format(plot_cfg.device, plot_cfg.algo_name, plot_cfg.env_name))
     plt.xlabel('epsiodes')
     plt.plot(rewards, label='rewards')
     plt.plot(ma_rewards, label='ma rewards')
@@ -73,8 +70,7 @@ def plot_rewards(rewards, ma_rewards, plot_cfg, tag='train'):
 def plot_success_rate(success_rate, plot_cfg, tag='train'):
     sns.set()
     plt.figure()  # 创建一个图形实例，方便同时多画几个图
-    plt.title("learning curve on {} of {} for {}".format(
-        plot_cfg.device, plot_cfg.algo_name, plot_cfg.env_name))
+    plt.title("learning curve on {} of {} for {}".format(plot_cfg.device, plot_cfg.algo_name, plot_cfg.env_name))
     plt.xlabel('epsiodes')
     plt.plot(success_rate, label='success rate')
     plt.legend()
@@ -83,25 +79,18 @@ def plot_success_rate(success_rate, plot_cfg, tag='train'):
     plt.show()
 
 
-def plot_waiting_time_and_require_time(success_request_list,
-                                       waiting_time_index,
-                                       rtl_index,
-                                       plot_cfg,
-                                       tag='train'):
+def plot_waiting_time_and_require_time(success_request_list, waiting_time_index, rtl_index, plot_cfg, tag='train'):
     sns.set()
     fig = plt.figure()
-    plt.title("more provision {} for {}".format(plot_cfg.algo_name,
-                                                plot_cfg.env_name))
+    plt.title("more provision {} for {}".format(plot_cfg.algo_name, plot_cfg.env_name))
     plt.xlabel('success request')
     rtl_dic = {}
     for success_request in success_request_list:
         if success_request[rtl_index] not in rtl_dic:
             rtl_dic[success_request[rtl_index]] = []
-            rtl_dic[success_request[rtl_index]].append(
-                success_request[waiting_time_index])
+            rtl_dic[success_request[rtl_index]].append(success_request[waiting_time_index])
         else:
-            rtl_dic[success_request[rtl_index]].append(
-                success_request[waiting_time_index])
+            rtl_dic[success_request[rtl_index]].append(success_request[waiting_time_index])
     import random
     for rtl in rtl_dic:
         plt.plot(random.sample(rtl_dic[rtl], 100), label=rtl)
@@ -156,14 +145,12 @@ def del_empty_dir(*paths):
 
 
 def concurrent_request_num_per_second_list_to_concurrent_request_num(concurrent_request_num_per_second_list):
-    print(concurrent_request_num_per_second_list)
-    print(type(concurrent_request_num_per_second_list))
     import uuid
     import csv
 
     request_list = []
-    rtl_and_request_id_list=[]
-    with open('../gatling-charts-highcharts-bundle-3.6.1/user-files/simulations/concurrent_request_num.csv', 'w', newline='') as f:
+    rtl_and_request_id_list = []
+    with open('../gatling-charts-highcharts-bundle-3.6.1/user-files/simulations/traffic.csv', 'w', newline='') as f:
         f_csv = csv.writer(f)
         for i in range(len(concurrent_request_num_per_second_list)):
             request_sum_the_second = concurrent_request_num_per_second_list[i]
@@ -171,7 +158,7 @@ def concurrent_request_num_per_second_list_to_concurrent_request_num(concurrent_
             for j in range(request_sum_the_second):
                 # [request_id, arrive_time, rtl]
                 request = []
-                request_id=str(uuid.uuid1())
+                request_id = str(uuid.uuid1())
                 request.append(request_id)
                 request.append(i)
                 # request.append(np.random.choice(rtl_list))
@@ -183,8 +170,7 @@ def concurrent_request_num_per_second_list_to_concurrent_request_num(concurrent_
                     rtl_int = 20
                 request.append(rtl_int)
                 request_list.append(request)
-                rtl_and_request_id_list.append([rtl_int,request_id])
-
+                rtl_and_request_id_list.append([rtl_int, request_id])
 
     headers = ['request_id', 'arrive_time', 'rtl']
     with open('concurrent_request_num.csv', 'w', newline='') as f:
@@ -194,5 +180,5 @@ def concurrent_request_num_per_second_list_to_concurrent_request_num(concurrent_
 
     with open('../gatling-charts-highcharts-bundle-3.6.1/user-files/rtl_and_request_id.csv', 'w', newline='') as f:
         f_csv = csv.writer(f)
-        f_csv.writerow(['rtl','request_id'])
+        f_csv.writerow(['rtl', 'request_id'])
         f_csv.writerows(rtl_and_request_id_list)

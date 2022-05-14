@@ -18,3 +18,5 @@ runs/
 .idea/
 
 venv
+
+gatling-charts-highcharts-bundle-3.6.1/

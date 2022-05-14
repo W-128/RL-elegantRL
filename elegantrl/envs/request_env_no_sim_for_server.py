@@ -37,7 +37,7 @@ curr_path = os.path.dirname(os.path.abspath(__file__))  # 当前文件所在绝�
 curr_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")  # 获取当前时间
 
 
-class RequestEnvNoSim:
+class RequestEnvNoSimForServer:
 
     def __init__(self):
         # 奖励参数设置
@@ -92,10 +92,7 @@ class RequestEnvNoSim:
         number_action = [0] * len(probability_action)
         for index in range(len(probability_action)):
             number_action[index] = int(
-                round(
-                    probability_action[index] *
-                    len(self.active_request_group_by_remaining_time_list[index]
-                        ), 0))
+                round(probability_action[index] * len(self.active_request_group_by_remaining_time_list[index]), 0))
         if self.invalid_action_optim:
             if index == 0:
                 if number_action[0] < len(self.active_request_group_by_remaining_time_list[0]):
@@ -144,14 +141,15 @@ class RequestEnvNoSim:
         # submit request
         # action=(从剩余时间为0的请求中提交的请求个数, 从剩余时间为1的请求中提交的请求个数,...,从剩余时间为5的请求中提交的请求个数)
         for remaining_time in range(self.action_dim):
+            # 提交任务
+
             for j in range(int(action[remaining_time])):
                 # time_stamp = time.time()
                 submit_index = np.random.choice(
                     self.active_request_group_by_remaining_time_list[remaining_time].__len__())
                 success_request = list(self.active_request_group_by_remaining_time_list[remaining_time][submit_index])
                 # 把提交的任务从active_request_list中删除
-                del self.active_request_group_by_remaining_time_list[
-                    remaining_time][submit_index]
+                del self.active_request_group_by_remaining_time_list[remaining_time][submit_index]
                 success_request[WAIT_TIME_INDEX] = self.t - success_request[ARRIVE_TIME_INDEX]
                 self.success_request_list.append(success_request)
 
@@ -178,9 +176,8 @@ class RequestEnvNoSim:
         # 成功奖励
         success_reward = 0
         for index in range(len(action)):
-            success_reward += ((self.success_reward_scale - index * 0.055) * min(action[index],
-                                                                                 self.threshold)) / float(
-                self.threshold)
+            success_reward += ((self.success_reward_scale - index * 0.055) *
+                               min(action[index], self.threshold)) / float(self.threshold)
             # success_reward += self.success_reward_scale * min(action[index], self.threshold) / float(self.threshold)
 
         reward = success_reward \
@@ -306,9 +303,7 @@ class RequestEnvNoSim:
         more_provision_list = []
         for success_request in self.success_request_list:
             more_provision_list.append(
-                float(success_request[RTL_INDEX] -
-                      success_request[WAIT_TIME_INDEX]) /
-                success_request[RTL_INDEX])
+                float(success_request[RTL_INDEX] - success_request[WAIT_TIME_INDEX]) / success_request[RTL_INDEX])
         return np.mean(more_provision_list)
 
     def get_success_request(self):
@@ -317,9 +312,8 @@ class RequestEnvNoSim:
     def get_submit_request_num_per_second_variance(self):
         submit_request_num_per_second_list = [0] * self.t
         for success_request in self.success_request_list:
-            submit_request_num_per_second_list[
-                success_request[ARRIVE_TIME_INDEX] +
-                success_request[WAIT_TIME_INDEX]] += 1
+            submit_request_num_per_second_list[success_request[ARRIVE_TIME_INDEX] +
+                                               success_request[WAIT_TIME_INDEX]] += 1
         more_than_threshold_times = 0
         for submit_request_num_per_second in submit_request_num_per_second_list:
             if submit_request_num_per_second > self.threshold:
@@ -329,30 +323,24 @@ class RequestEnvNoSim:
     def get_more_than_threshold_rate(self):
         submit_request_num_per_second_list = [0] * self.t
         for success_request in self.success_request_list:
-            submit_request_num_per_second_list[
-                success_request[ARRIVE_TIME_INDEX] +
-                success_request[WAIT_TIME_INDEX]] += 1
+            submit_request_num_per_second_list[success_request[ARRIVE_TIME_INDEX] +
+                                               success_request[WAIT_TIME_INDEX]] += 1
         more_than_threshold_times = 0
         for submit_request_num_per_second in submit_request_num_per_second_list:
             if submit_request_num_per_second > self.threshold:
                 more_than_threshold_times += 1
-        return float(more_than_threshold_times) / sum(
-            submit_request_num_per_second_list)
+        return float(more_than_threshold_times) / sum(submit_request_num_per_second_list)
 
     def print_wait_time_avg(self):
         success_request_rtl_dic = {}
         for success_request in self.success_request_list:
             if success_request[RTL_INDEX] in success_request_rtl_dic:
-                success_request_rtl_dic[success_request[RTL_INDEX]].append(
-                    success_request)
+                success_request_rtl_dic[success_request[RTL_INDEX]].append(success_request)
             else:
                 success_request_rtl_dic[success_request[RTL_INDEX]] = []
-                success_request_rtl_dic[success_request[RTL_INDEX]].append(
-                    success_request)
+                success_request_rtl_dic[success_request[RTL_INDEX]].append(success_request)
         for rtl in success_request_rtl_dic:
-            wait_time_arr = np.array(np.array(
-                success_request_rtl_dic[rtl])[:, WAIT_TIME_INDEX],
-                                     dtype=int)
+            wait_time_arr = np.array(np.array(success_request_rtl_dic[rtl])[:, WAIT_TIME_INDEX], dtype=int)
             wait_time_avg = np.average(wait_time_arr)
             print('rtl:' + str(rtl) + '等待时间平均值:{:.1f}'.format(wait_time_avg))
 
