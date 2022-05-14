@@ -38,6 +38,7 @@ class RequestEnvNoSim:
         self.success_reward_scale = 3
         self.more_than_threshold_penalty_scale = -9
         self.fail_penalty_scale = -3
+        self.max_remaining_time_request_reward = 0.5
         self.beta = 1
         self.c = -1
         # action需要从概率到数量
@@ -141,9 +142,9 @@ class RequestEnvNoSim:
                 # time_stamp = time.time()
                 submit_index = np.random.choice(
                     self.active_request_group_by_remaining_time_list[remaining_time].__len__())
-                success_request = self.active_request_group_by_remaining_time_list[remaining_time][submit_index].copy()
+                success_request = self.active_request_group_by_remaining_time_list[remaining_time][0].copy()
                 # 把提交的任务从active_request_list中删除
-                del self.active_request_group_by_remaining_time_list[remaining_time][submit_index]
+                del self.active_request_group_by_remaining_time_list[remaining_time][0]
                 success_request['wait_time'] = self.t - success_request['arrive_time']
                 self.success_request_list.append(success_request)
                 if self.t in self.success_request_dic_key_is_end_time:
@@ -190,8 +191,9 @@ class RequestEnvNoSim:
 
         # 成功奖励
         success_reward = 0
+        decline = float(self.success_reward_scale - self.max_remaining_time_request_reward) / self.N
         for index in range(len(action)):
-            success_reward += ((self.success_reward_scale - index * 0.055) *
+            success_reward += ((self.success_reward_scale - index * decline) *
                                min(action[index], self.threshold)) / float(self.threshold)
             # success_reward += self.success_reward_scale * min(action[index], self.threshold) / float(self.threshold)
 
