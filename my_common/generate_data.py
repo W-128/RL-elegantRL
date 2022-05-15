@@ -1,57 +1,69 @@
-from my_common.utils import concurrent_request_num_per_second_list_to_concurrent_request_num
-import random
-# t=1000ms
-TIME_UNIT = 1
-TIME_UNIT_IN_ON_SECOND = int(1 / TIME_UNIT)
-# 生成一个先升后降的流量 时长320s 0to80to0 阈值40
-header = ['concurrent_request_num_per_second']
+import pandas as pd
+import os
+import datetime
 
 
-def request_number(second):
-    if int(0.5 * second) == 0:
-        return 1
-    else:
-        return int(0.5 * second)
+def get_arrive_time_request_dic(arrive_time_index):
+    '''
+    将数据集转换为arriveTime_request_dic
+    arriveTime_request_dic:
+    key=arriveTime
+    value=arriveTime为key的request_in_dic列表
+    request_in_dic的形式为[request_id, arrive_time, rtl]
+    '''
+    new_arrive_request_in_dic = []
+    curPath = os.path.abspath(os.path.dirname(__file__))
+    filename = curPath + '/concurrent_request_num.csv'
+    data = pd.read_csv(filename, header=0)
+    for i in range(0, len(data)):
+        request_in_dic = [data.loc[i, 'request_id'], data.loc[i, 'arrive_time'], data.loc[i, 'rtl']]
+        new_arrive_request_in_dic.append(request_in_dic)
+
+    arriveTime_request_dic = {}
+    for request_in_dic in new_arrive_request_in_dic:
+        if request_in_dic[arrive_time_index] in arriveTime_request_dic:
+            arriveTime_request_dic[request_in_dic[arrive_time_index]].append(request_in_dic)
+        else:
+            request_list = [request_in_dic]
+            arriveTime_request_dic[request_in_dic[arrive_time_index]] = request_list
+    return new_arrive_request_in_dic, arriveTime_request_dic
 
 
-temp_list = []
-for second in range(200):
-    temp_list.append(random.choice([40,80]))
+def get_arrive_time_request_dic_from_request_record(arrive_time_index):
+    '''
+    将数据集转换为arriveTime_request_dic
+    arriveTime_request_dic:
+    key=arriveTime
+    value=arriveTime为key的request_in_dic列表
+    request_in_dic的形式为[request_id, arrive_time, rtl]
+    '''
+    new_arrive_request_in_dic_temp = []
+    curPath = os.path.abspath(os.path.dirname(__file__))
+    rootPath = os.path.split(curPath)[0]
+    filename = rootPath + '/server/request_record.csv'
+    data = pd.read_csv(filename, header=0)
 
-concurrent_request_num_per_second = list(temp_list)
-temp_list.reverse()
-concurrent_request_num_per_second = concurrent_request_num_per_second + temp_list
-# concurrent_request_num_per_second index是到达时间 element是请求个数
-print(concurrent_request_num_per_second)
+    for i in range(0, len(data)):
+        request_in_dic = [
+            data.loc[i, 'request_id'],
+            datetime.datetime.strptime(data.loc[i, 'arrive_time'], '%Y-%m-%d %H:%M:%S.%f'), data.loc[i, 'rtl']
+        ]
+        new_arrive_request_in_dic_temp.append(request_in_dic)
+    new_arrive_request_in_dic_temp = sorted(new_arrive_request_in_dic_temp, key=lambda i: i[1])
 
-concurrent_request_num_per_second_list_to_concurrent_request_num(
-    concurrent_request_num_per_second)
+    base_time = new_arrive_request_in_dic_temp[0][1].replace(microsecond=0)
+    new_arrive_request_in_dic = []
+    for i in range(0, len(new_arrive_request_in_dic_temp)):
+        delta_second = int(new_arrive_request_in_dic_temp[i][1].timestamp() - base_time.timestamp())
+        request_in_dic_second = list(new_arrive_request_in_dic_temp[i])
+        request_in_dic_second[1] = delta_second
+        new_arrive_request_in_dic.append(request_in_dic_second)
 
-# # 先造只有rtl1 和rtl3
-# rtl_list = [1, 3]
-# for i in range(len(rtl_list)):
-#     rtl_list[i] = rtl_list[i] * TIME_UNIT_IN_ON_SECOND
-#
-# request_list = []
-# for i in range(len(concurrent_request_num_per_second)):
-#     request_sum_the_second = concurrent_request_num_per_second[i]
-#     request_num_in_the_second = [int(request_sum_the_second * TIME_UNIT)] * (TIME_UNIT_IN_ON_SECOND)
-#     remain_request_num = request_sum_the_second - int(request_sum_the_second * TIME_UNIT) * (TIME_UNIT_IN_ON_SECOND)
-#     for j in range(remain_request_num):
-#         request_num_in_the_second[j] = request_num_in_the_second[j] + 1
-#     np.random.shuffle(request_num_in_the_second)
-#     print(request_num_in_the_second)
-#     for k in range(TIME_UNIT_IN_ON_SECOND):
-#         for h in range(request_num_in_the_second[k]):
-#             # [request_id, arrive_time, rtl]
-#             request = []
-#             request.append(str(uuid.uuid1()))
-#             request.append(i * TIME_UNIT_IN_ON_SECOND + k)
-#             request.append(np.random.choice(rtl_list))
-#             request_list.append(request)
-#
-# headers = ['request_id', 'arrive_time', 'rtl']
-# with open('concurrent_request_num.csv', 'w', newline='')as f:
-#     f_csv = csv.writer(f)
-#     f_csv.writerow(headers)
-#     f_csv.writerows(request_list)
+    arriveTime_request_dic = {}
+    for request_in_dic in new_arrive_request_in_dic:
+        if request_in_dic[arrive_time_index] in arriveTime_request_dic:
+            arriveTime_request_dic[request_in_dic[arrive_time_index]].append(request_in_dic)
+        else:
+            request_list = [request_in_dic]
+            arriveTime_request_dic[request_in_dic[arrive_time_index]] = request_list
+    return new_arrive_request_in_dic, arriveTime_request_dic

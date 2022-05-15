@@ -40,7 +40,7 @@ class Request:
         self.wait_time = wait_time
 
     def run(self):
-        # time.sleep(0.9)
+        time.sleep(0.9)
         end_time = datetime.datetime.now().timestamp()
         delta_ms = int((end_time - self.start_time) * 1000)
         # logger.info("rtllevel:" + str(self.rtl) + " request response time: " + str(delta_ms) + "ms")

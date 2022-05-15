@@ -37,7 +37,7 @@ curr_path = os.path.dirname(os.path.abspath(__file__))  # 当前文件所在绝�
 curr_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")  # 获取当前时间
 
 
-class RequestEnvNoSim:
+class RequestEnvNoSimDataFromRequestRecord:
 
     def __init__(self):
         # 奖励参数设置
@@ -144,11 +144,9 @@ class RequestEnvNoSim:
         for remaining_time in range(self.action_dim):
             for j in range(int(action[remaining_time])):
                 # time_stamp = time.time()
-                submit_index = np.random.choice(
-                    self.active_request_group_by_remaining_time_list[remaining_time].__len__())
-                success_request = list(self.active_request_group_by_remaining_time_list[remaining_time][submit_index])
+                success_request = list(self.active_request_group_by_remaining_time_list[remaining_time][0])
                 # 把提交的任务从active_request_list中删除
-                del self.active_request_group_by_remaining_time_list[remaining_time][submit_index]
+                del self.active_request_group_by_remaining_time_list[remaining_time][0]
                 success_request[WAIT_TIME_INDEX] = self.t - success_request[ARRIVE_TIME_INDEX]
                 self.success_request_list.append(success_request)
 
@@ -268,7 +266,8 @@ class RequestEnvNoSim:
         self.invalid_action_times = 0
         self.success_request_list = []
         self.fail_request_list = []
-        self.new_arrive_request_in_dic, self.arriveTime_request_dic = get_arrive_time_request_dic(ARRIVE_TIME_INDEX)
+        self.new_arrive_request_in_dic, self.arriveTime_request_dic = get_arrive_time_request_dic_from_request_record(
+            ARRIVE_TIME_INDEX)
         self.active_request_group_by_remaining_time_list = self.get_new_arrive_request_list()
         self.active_request_group_by_remaining_time_list_to_state()
         return self.state_record
@@ -280,7 +279,8 @@ class RequestEnvNoSim:
         self.invalid_action_times = 0
         self.success_request_list = []
         self.fail_request_list = []
-        self.new_arrive_request_in_dic, self.arriveTime_request_dic = get_arrive_time_request_dic(ARRIVE_TIME_INDEX)
+        self.new_arrive_request_in_dic, self.arriveTime_request_dic = get_arrive_time_request_dic_from_request_record(
+            ARRIVE_TIME_INDEX)
         self.active_request_group_by_remaining_time_list = self.get_new_arrive_request_list()
         self.active_request_group_by_remaining_time_list_to_state()
         return self.active_request_group_by_remaining_time_list
@@ -348,6 +348,3 @@ class RequestEnvNoSim:
         for active_request_group_by_remaining_time in self.active_request_group_by_remaining_time_list:
             state.append(len(active_request_group_by_remaining_time))
         return state
-
-
-env = RequestEnvNoSim()
