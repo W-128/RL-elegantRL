@@ -140,8 +140,6 @@ class RequestEnvNoSim:
         for remaining_time in range(self.action_dim):
             for j in range(int(action[remaining_time])):
                 # time_stamp = time.time()
-                submit_index = np.random.choice(
-                    self.active_request_group_by_remaining_time_list[remaining_time].__len__())
                 success_request = self.active_request_group_by_remaining_time_list[remaining_time][0].copy()
                 # 把提交的任务从active_request_list中删除
                 del self.active_request_group_by_remaining_time_list[remaining_time][0]
