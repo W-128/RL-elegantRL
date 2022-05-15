@@ -32,6 +32,7 @@ class RequestEnvNoSimWrapper():
         self.if_discrete = False
         self.env.more_than_threshold_penalty_scale = more_than_threshold_penalty_scale
         self.env.invalid_action_optim = True
+        self.env.avoid_more_than_threshold = True
 
     def reset(self):
         reset_state = np.asarray(self.env.reset(), dtype=np.float32) / self.env.threshold

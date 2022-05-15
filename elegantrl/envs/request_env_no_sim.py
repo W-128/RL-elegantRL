@@ -70,6 +70,7 @@ class RequestEnvNoSim:
         self.need_evaluate_env_correct = False
         # 测试阶段将该值置为true
         self.invalid_action_optim = False
+        self.avoid_more_than_threshold = False
         self.t = 0
         self.next_request_num = 0
         self.success_request_dic_key_is_end_time = {}
@@ -94,6 +95,20 @@ class RequestEnvNoSim:
             if index == 0:
                 if number_action[0] < len(self.active_request_group_by_remaining_time_list[0]):
                     number_action[0] = min(self.threshold, len(self.active_request_group_by_remaining_time_list[0]))
+        if self.avoid_more_than_threshold:
+            if np.sum(number_action) > self.threshold:
+                need_reduce_number = np.sum(number_action) - self.threshold
+                while need_reduce_number > 0:
+                    for index in range(len(number_action) - 1, -1, -1):
+                        if number_action[index] > 0:
+                            if number_action[index] > need_reduce_number:
+                                number_action[index] = number_action[index] - need_reduce_number
+                                need_reduce_number = 0
+                                break
+                            if number_action[index] < need_reduce_number:
+                                need_reduce_number -= number_action[index]
+                                number_action[index] = 0
+
         return number_action
 
     # 返回奖励值和下一个状态
