@@ -77,8 +77,6 @@ class FIFOConfig:
 
 env = RequestEnvNoSim()
 
-THRESHOLD = env.threshold
-
 env.action_is_probability = False
 
 # random_choose_cfg = RandomChooseConfig()

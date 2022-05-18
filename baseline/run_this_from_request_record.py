@@ -5,7 +5,7 @@ curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = os.path.split(curPath)[0]
 sys.path.append(rootPath)
 
-from elegantrl.envs.request_env_no_sim_get_data_from_request_record import RequestEnvNoSim
+from elegantrl.envs.request_env_no_sim_get_data_from_request_record import RequestEnvNoSimDataFromRequestRecord
 from agent import RandomChoose, EDF, EDFSubmitThreshold, fifo
 from train_test import test, test_fifo
 import datetime
@@ -75,7 +75,7 @@ class FIFOConfig:
         self.save = True  # 是否保存图片
 
 
-env = RequestEnvNoSim()
+env = RequestEnvNoSimDataFromRequestRecord()
 
 THRESHOLD = env.threshold
 

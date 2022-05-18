@@ -17,7 +17,7 @@ class BufferFIFO:
     boss_thread_pool = ThreadPoolExecutor(max_workers=1)
     queue = queue.Queue()
     request_threshold = 45
-    worker_thread_pool = ThreadPoolExecutor(max_workers=35)
+    worker_thread_pool = ThreadPoolExecutor(max_workers=50)
 
     def __init__(self) -> None:
         self.env = Env()
@@ -38,30 +38,18 @@ class BufferFIFO:
 
     def consume(self):
         while True:
-            for i in range(self.request_threshold):
+            remain_submit_times = self.request_threshold
+            while (remain_submit_times > 0):
                 if self.queue.qsize != 0:
                     req = self.queue.get()
-                    wait_time_ms = (datetime.datetime.now().timestamp() - req.start_time) * 1000
+                    wait_time_ms = int((datetime.datetime.now().timestamp() - req.start_time) * 1000)
                     req.set_wait_time(wait_time_ms)
                     if wait_time_ms > req.rtl * 1000:
                         req.is_success = False
                     else:
                         self.worker_thread_pool.submit(req.run)
+                        remain_submit_times = remain_submit_times - 1
                     req.event.set()
                 else:
                     break
             time.sleep(1)
-
-
-# print("主线程，生产任务, task_id:1, rtl=1" +
-#       datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
-# Buffer.get_instance().produce('1', '1')
-# time.sleep(1)
-# print("主线程，生产任务, task_id:2, rtl=2" +
-#       datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
-# Buffer.get_instance().produce('2', '2')
-# print("主线程，生产任务, task_id:3, rtl=3" +
-#       datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
-# Buffer.get_instance().produce('3', '3')
-# time.sleep(1)
-# time.sleep(1)
