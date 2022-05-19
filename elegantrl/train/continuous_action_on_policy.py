@@ -16,8 +16,8 @@ from elegantrl.envs.request_env_no_sim import RequestEnvNoSim
 
 class RequestEnvNoSimWrapper():
 
-    def __init__(self, gamma) -> None:
-        self.env = RequestEnvNoSim()
+    def __init__(self, gamma,task_num) -> None:
+        self.env = RequestEnvNoSim(task_num)
         self.env_num = 1
         self.env_name = 'RequestEnvNoSim' + str(gamma)
         self.max_step = len(self.env.new_arrive_request_in_dic
@@ -61,8 +61,9 @@ class RequestEnvNoSimWrapper():
 def continuous_action_on_policy(gamma=0.9):
     gpu_id = 0  # >=0 means GPU ID, -1 means CPU
     drl_id = 0  # int(sys.argv[2])
-
-    env = RequestEnvNoSimWrapper(gamma)
+    #流程任务数
+    task_num=2
+    env = RequestEnvNoSimWrapper(gamma,task_num)
     env.invalid_action_optim = False
     agent = [AgentPPO, AgentPPO_H][drl_id]
 

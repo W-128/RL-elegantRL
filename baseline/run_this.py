@@ -31,6 +31,16 @@ WAIT_TIME_INDEX = 4
 TIME_UNIT = 1
 TIME_UNIT_IN_ON_SECOND = int(1 / TIME_UNIT)
 
+# 环境设置
+# 使用的流程实例的任务数量
+task_num = 2
+
+env = RequestEnvNoSim(task_num)
+
+THRESHOLD = env.threshold
+
+env.action_is_probability = False
+
 
 class RandomChooseConfig:
     '''训练相关参数'''
@@ -75,12 +85,6 @@ class FIFOConfig:
                            '/' + self.algo_name + '/results/'  # 保存结果的路径
         self.save = True  # 是否保存图片
 
-
-env = RequestEnvNoSim()
-
-THRESHOLD = env.threshold
-
-env.action_is_probability = False
 
 # random_choose_cfg = RandomChooseConfig()
 # make_dir(random_choose_cfg.result_path)  # 创建模型路径的文件夹

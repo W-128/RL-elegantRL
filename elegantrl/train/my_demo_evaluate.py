@@ -20,8 +20,8 @@ from elegantrl.train.evaluator import \
 
 class RequestEnvNoSimWrapper():
 
-    def __init__(self, more_than_threshold_penalty_scale=-4) -> None:
-        self.env = RequestEnvNoSim()
+    def __init__(self, task_num, more_than_threshold_penalty_scale=-4) -> None:
+        self.env = RequestEnvNoSim(task_num)
         self.env_num = 1
         self.env_name = 'RequestEnvNoSim'
         self.max_step = len(self.env.new_arrive_request_in_dic
@@ -75,11 +75,13 @@ class RequestEnvNoSimWrapper():
 
 
 def evaluate_agent():
-    env = RequestEnvNoSimWrapper(more_than_threshold_penalty_scale=0)
+    # 流程任务数
+    task_num = 2
+    env = RequestEnvNoSimWrapper(task_num, more_than_threshold_penalty_scale=0)
     agent = AgentPPO
     args = Arguments(agent, env=env)
     act = agent(args.net_dim, env.state_dim, env.action_dim).act
-    actor_path = 'RequestEnvNoSim0.95_PPO_0/actor_04752485_05638.627.pth'
+    actor_path = str(task_num)+'-task/RequestEnvNoSim0.95_PPO_0/actor_04752485_05638.627.pth'
     act.load_state_dict(torch.load(actor_path, map_location=lambda storage, loc: storage))
 
     eval_times = 4

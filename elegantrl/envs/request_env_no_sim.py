@@ -32,15 +32,17 @@ curr_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")  # 获取当前时
 
 class RequestEnvNoSim:
 
-    def __init__(self):
-        # 奖励参数设置
-        self.more_provision_penalty_scale = 0
-        self.success_reward_scale = 3
-        self.more_than_threshold_penalty_scale = -9
-        self.fail_penalty_scale = -3
-        self.max_remaining_time_request_reward = 0.5
-        self.beta = 1
-        self.c = -1
+    def __init__(self, task_num):
+        if task_num == 2:
+            # 奖励参数设置
+            self.task_num = 2
+            self.more_provision_penalty_scale = 0
+            self.success_reward_scale = 3
+            self.more_than_threshold_penalty_scale = -9
+            self.fail_penalty_scale = -3
+            self.max_remaining_time_request_reward = 0.5
+            self.beta = 1
+            self.c = -1
         # action需要从概率到数量
         self.action_is_probability = True
         # 状态向量的维数=rtl的级别个数
@@ -175,21 +177,21 @@ class RequestEnvNoSim:
                     self.new_arrive_request_in_dic.append(next_request)
 
         self.t += 1
-
-        # 失败数量
         fail_penalty = 0
-        fail_task1_num = 0
-        fail_task2_num = 0
-        # remaining_time==0且还留在active_request_group_by_remaining_time_list中的请求此时失败
-        for active_request in self.active_request_group_by_remaining_time_list[0]:
-            self.fail_request_list.append(list(active_request))
-            if active_request['task_id'] == 'task1':
-                fail_task1_num += 1
-            if active_request['task_id'] == 'task2':
-                fail_task2_num += 1
-        self.active_request_group_by_remaining_time_list[0] = []
-        fail_penalty = (fail_task1_num * self.fail_penalty_scale * 2 +
-                        fail_task2_num * self.fail_penalty_scale) / float(self.threshold)
+        if self.task_num == 2:
+            # 失败数量
+            fail_task1_num = 0
+            fail_task2_num = 0
+            # remaining_time==0且还留在active_request_group_by_remaining_time_list中的请求此时失败
+            for active_request in self.active_request_group_by_remaining_time_list[0]:
+                self.fail_request_list.append(list(active_request))
+                if active_request['task_id'] == 'task1':
+                    fail_task1_num += 1
+                if active_request['task_id'] == 'task2':
+                    fail_task2_num += 1
+            self.active_request_group_by_remaining_time_list[0] = []
+            fail_penalty = (fail_task1_num * self.fail_penalty_scale * 2 +
+                            fail_task2_num * self.fail_penalty_scale) / float(self.threshold)
 
         # 超阈值惩罚
         more_than_threshold_penalty = 0
@@ -354,7 +356,7 @@ class RequestEnvNoSim:
         more_provision_list = []
         for success_request in self.success_request_list:
             more_provision_list.append(success_request['rtl'] - success_request['wait_time'])
-        return np.mean(more_provision_list) 
+        return np.mean(more_provision_list)
 
     def get_more_provision_sum(self):
         more_provision_list = []
