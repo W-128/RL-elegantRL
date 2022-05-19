@@ -40,7 +40,7 @@ def get_arrive_time_request_dic_from_request_record(arrive_time_index):
     new_arrive_request_in_dic_temp = []
     curPath = os.path.abspath(os.path.dirname(__file__))
     rootPath = os.path.split(curPath)[0]
-    filename = rootPath + '/server/request_record.csv'
+    filename = rootPath + '/server/edf_threshold_request_record.csv'
     data = pd.read_csv(filename, header=0)
 
     for i in range(0, len(data)):
