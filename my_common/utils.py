@@ -183,27 +183,39 @@ def concurrent_request_num_per_second_list_to_concurrent_request_num(concurrent_
     rtl_dic = {'2': 0.1, '7': 0.9}
 
     request_list = []
-    for i in range(len(concurrent_request_num_per_second_list)):
-        request_sum_the_second = concurrent_request_num_per_second_list[i]
-        rtl_request_num_dic = {}
-        used_request_sum_the_second = 0
-        for rtl in rtl_dic:
-            rtl_request_num = math.floor(request_sum_the_second * rtl_dic[rtl])
-            rtl_request_num_dic[rtl] = rtl_request_num
-            used_request_sum_the_second += rtl_request_num
-        if used_request_sum_the_second < request_sum_the_second:
-            rtl_request_num_dic['7'] += request_sum_the_second - used_request_sum_the_second
-        for rtl in rtl_request_num_dic:
-            for j in range(rtl_request_num_dic[rtl]):
-                # [request_id, arrive_time, rtl]
-                request = []
-                request.append(str(uuid.uuid1()))
-                request.append(i)
-                request.append(rtl)
-                request_list.append(request)
+    rtl_and_request_id_list = []
+    with open('../gatling-charts-highcharts-bundle-3.6.1/user-files/simulations/traffic.csv', 'w', newline='') as f:
+        f_csv = csv.writer(f)
+        for i in range(len(concurrent_request_num_per_second_list)):
+            request_sum_the_second = concurrent_request_num_per_second_list[i]
+            f_csv.writerow([request_sum_the_second])
+            rtl_request_num_dic = {}
+            used_request_sum_the_second = 0
+            for rtl in rtl_dic:
+                rtl_request_num = math.floor(request_sum_the_second * rtl_dic[rtl])
+                rtl_request_num_dic[rtl] = rtl_request_num
+                used_request_sum_the_second += rtl_request_num
+            if used_request_sum_the_second < request_sum_the_second:
+                rtl_request_num_dic['7'] += request_sum_the_second - used_request_sum_the_second
+            for rtl in rtl_request_num_dic:
+                for j in range(rtl_request_num_dic[rtl]):
+                    # [request_id, arrive_time, rtl]
+                    request = []
+                    request_id = str(uuid.uuid1())
+                    request.append(request_id)
+                    request.append(i)
+                    request.append(rtl)
+                    request_list.append(request)
+                    rtl_and_request_id_list.append([rtl, request_id])
+
 
     headers = ['request_id', 'arrive_time', 'rtl']
     with open('concurrent_request_num.csv', 'w', newline='') as f:
         f_csv = csv.writer(f)
         f_csv.writerow(headers)
         f_csv.writerows(request_list)
+
+    with open('../gatling-charts-highcharts-bundle-3.6.1/user-files/rtl_and_request_id.csv', 'w', newline='') as f:
+        f_csv = csv.writer(f)
+        f_csv.writerow(['rtl', 'request_id'])
+        f_csv.writerows(rtl_and_request_id_list)

@@ -33,6 +33,7 @@ scaled_sub_df = (sub_df / sub_df['view'].max() * scaled_max).apply(lambda x: rou
 scaled_sub_df['view'] = scaled_sub_df['view'].apply(lambda x: int(x))
 
 print(np.mean(scaled_sub_df['view']))
+print(np.sum(scaled_sub_df['view']))
 scaled_sub_df.plot()
 plt.savefig('nasa_sample.png')
 plt.show()
@@ -40,5 +41,7 @@ plt.show()
 concurrent_request_num_per_second_list = []
 for i in range(len(scaled_sub_df.index)):
     concurrent_request_num_per_second_list.append(scaled_sub_df['view'][i])
+
+print(concurrent_request_num_per_second_list)
+
 concurrent_request_num_per_second_list_to_concurrent_request_num(concurrent_request_num_per_second_list)
-print(scaled_sub_df['view'].values)
