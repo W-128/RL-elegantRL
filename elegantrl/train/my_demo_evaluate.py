@@ -15,6 +15,7 @@ from elegantrl.train.config import Arguments
 from elegantrl.envs.request_env_no_sim import RequestEnvNoSim
 from elegantrl.train.evaluator import \
     get_episode_return_and_step_and_success_rate_and_more_provision_and_variance_and_more_than_threshold_rate
+
 """custom env"""
 
 
@@ -76,12 +77,15 @@ class RequestEnvNoSimWrapper():
 
 def evaluate_agent():
     # 流程任务数
-    task_num = 2
+    task_num = 1
     env = RequestEnvNoSimWrapper(task_num, more_than_threshold_penalty_scale=0)
     agent = AgentPPO
     args = Arguments(agent, env=env)
     act = agent(args.net_dim, env.state_dim, env.action_dim).act
-    actor_path = str(task_num)+'-task/RequestEnvNoSim0.95_PPO_0/actor_04752485_05638.627.pth'
+    two_task_actor_path = 'RequestEnvNoSim0.95_PPO_0/actor_04752485_05638.627.pth'
+    one_task_actor_path = 'RequestEnvNoSim0.8_PPO_0/actor_01561000_06050.265.pth'
+    actor_path = str(task_num) + '-task/' + one_task_actor_path
+
     act.load_state_dict(torch.load(actor_path, map_location=lambda storage, loc: storage))
 
     eval_times = 4
@@ -96,8 +100,9 @@ def evaluate_agent():
 
     print(
         "奖励平均值：{:.1f}, 成功率平均值：{:.1f}%, 超供率平均值：{:.1f}%, 超供程度平均值：{:.1f}%, 超供mean平均值：{:.1f}, 超供sum平均值：{:.1f},提交量大于阈值的概率：{:.5f}%, 方差平均值：{:.1f}, 步数平均值：{:.1f}"
-        .format(r_avg, success_rate_avg, more_provision_rate_avg, more_provision_degree_avg, more_provision_mean_avg,
-                more_provision_sum_avg, more_than_threshold_rate_avg, variance_avg, s_avg))
+            .format(r_avg, success_rate_avg, more_provision_rate_avg, more_provision_degree_avg,
+                    more_provision_mean_avg,
+                    more_provision_sum_avg, more_than_threshold_rate_avg, variance_avg, s_avg))
 
     env.print_wait_time_avg()
 
@@ -133,7 +138,7 @@ def evaluate_agent():
 
     plt.legend()
     plt.savefig("more_provision")
-    plt.show()
+    # plt.show()
 
 
 if __name__ == "__main__":

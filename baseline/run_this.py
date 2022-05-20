@@ -33,7 +33,7 @@ TIME_UNIT_IN_ON_SECOND = int(1 / TIME_UNIT)
 
 # 环境设置
 # 使用的流程实例的任务数量
-task_num = 2
+task_num = 1
 
 env = RequestEnvNoSim(task_num)
 

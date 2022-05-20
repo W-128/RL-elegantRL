@@ -114,7 +114,7 @@ def plot_waiting_time_and_require_time(success_request_dic_key_is_end_time, rtl_
     plt.legend()
     if plot_cfg.save:
         plt.savefig(plot_cfg.result_path + "{}_more_provision".format(tag))
-    plt.show()
+    # plt.show()
 
 
 def plot_losses(losses, algo="DQN", save=True, path='./'):
@@ -161,18 +161,19 @@ def del_empty_dir(*paths):
                 os.removedirs(os.path.join(path, dir))
 
 
-def generate_next_request(success_request):
-    # request={'request_id', 'arrive_time', 'rtl', 'task_id', 'remaining_time'}
-    # success_request{'request_id', 'arrive_time', 'rtl', 'task_id', 'wait_time'}
-    if success_request['task_id'] == 'task1':
-        arrive_time = success_request['wait_time'] + success_request['arrive_time'] + 3
-        rtl = success_request['rtl']
-        request = {}
-        request['request_id'] = success_request['request_id'] + '-1'
-        request['arrive_time'] = arrive_time
-        request['rtl'] = rtl
-        request['task_id'] = 'task2'
-        return request
+def generate_next_request(success_request, task_num):
+    if task_num == 2:
+        # request={'request_id', 'arrive_time', 'rtl', 'task_id', 'remaining_time'}
+        # success_request{'request_id', 'arrive_time', 'rtl', 'task_id', 'wait_time'}
+        if success_request['task_id'] == 'task1':
+            arrive_time = success_request['wait_time'] + success_request['arrive_time'] + 3
+            rtl = success_request['rtl']
+            request = {}
+            request['request_id'] = success_request['request_id'] + '-1'
+            request['arrive_time'] = arrive_time
+            request['rtl'] = rtl
+            request['task_id'] = 'task2'
+            return request
     return {}
 
 
