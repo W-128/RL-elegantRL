@@ -19,6 +19,7 @@ import seaborn as sns
 import random
 import math
 from matplotlib.font_manager import FontProperties  # 导入字体模块
+import logging
 
 import sys
 import os
@@ -208,7 +209,6 @@ def concurrent_request_num_per_second_list_to_concurrent_request_num(concurrent_
                     request_list.append(request)
                     rtl_and_request_id_list.append([rtl, request_id])
 
-
     headers = ['request_id', 'arrive_time', 'rtl']
     with open('concurrent_request_num.csv', 'w', newline='') as f:
         f_csv = csv.writer(f)
@@ -219,3 +219,20 @@ def concurrent_request_num_per_second_list_to_concurrent_request_num(concurrent_
         f_csv = csv.writer(f)
         f_csv.writerow(['rtl', 'request_id'])
         f_csv.writerows(rtl_and_request_id_list)
+
+
+def get_logger(log_file_name, log_level):
+    # 创建logger对象
+    logger = logging.getLogger(log_file_name)
+    # 设置日志等级
+    logger.setLevel(log_level)
+    # 追加写入文件a ，设置utf-8编码防止中文写入乱码
+    log = logging.FileHandler('log/' + log_file_name + '.log', 'a', encoding='utf-8')
+    # 向文件输出的日志级别
+    log.setLevel(log_level)
+    # 向文件输出的日志信息格式
+    formatter = logging.Formatter('%(asctime)s - %(filename)s - line:%(lineno)d - %(levelname)s - %(message)s')
+    log.setFormatter(formatter)
+    # 加载文件到logger对象中
+    logger.addHandler(log)
+    return logger

@@ -18,3 +18,5 @@ runs/
 .idea/
 
 venv
+
+PATH_TO_LOG_FILE

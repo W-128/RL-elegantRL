@@ -404,6 +404,8 @@ class RequestEnvNoSimDataFromRequestRecord:
         for submit_request_num_per_second in submit_request_num_per_second_list:
             if submit_request_num_per_second > self.threshold:
                 more_than_threshold_times += 1
+        if more_than_threshold_times==0:
+            return 0.0
         return float(more_than_threshold_times) / sum(submit_request_num_per_second_list)
 
     def print_wait_time_avg(self):

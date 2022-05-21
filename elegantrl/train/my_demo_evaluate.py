@@ -76,14 +76,14 @@ class RequestEnvNoSimWrapper():
 
 def evaluate_agent():
     # 流程任务数
-    task_num = 2
+    task_num = 1
     env = RequestEnvNoSimWrapper(task_num, more_than_threshold_penalty_scale=0)
     agent = AgentPPO
     args = Arguments(agent, env=env)
     act = agent(args.net_dim, env.state_dim, env.action_dim).act
     two_task_actor_path = 'RequestEnvNoSim0.95_PPO_0/actor_04752485_05638.627.pth'
-    one_task_actor_path = 'RequestEnvNoSim0.85_PPO_0/actor_01328267_05668.068.pth'
-    actor_path = str(task_num) + '-task/' + two_task_actor_path
+    one_task_actor_path = 'RequestEnvNoSim0.8_PPO_0/actor_00975952_05888.821.pth'
+    actor_path = str(task_num) + '-task-end_reward=1/' + one_task_actor_path
 
     act.load_state_dict(torch.load(actor_path, map_location=lambda storage, loc: storage))
 

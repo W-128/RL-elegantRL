@@ -1,7 +1,12 @@
 import logging
-import time
+import os
+import sys
 import datetime
-from my_log import get_logger
+
+curPath = os.path.abspath(os.path.dirname(__file__))
+rootPath = os.path.split(curPath)[0]
+sys.path.append(rootPath)
+from my_common.utils import get_logger
 
 
 class Request:
@@ -14,12 +19,12 @@ class Request:
         self.event = event
         self.is_success = True
 
-    def set_wait_time(self, wait_time):
-        self.wait_time = wait_time
+    def set_submit_time(self, submit_time):
+        self.submit_time = submit_time
 
     def run(self):
-        time.sleep(0.9)
-        end_time = datetime.datetime.now().timestamp()
-        delta_ms = int((end_time - self.start_time) * 1000)
+        # time.sleep(0.9)
+        # end_time = datetime.datetime.now().timestamp()
+        delta_ms = int((self.submit_time - self.start_time) * 1000)
         # logger.info("rtllevel:" + str(self.rtl) + " request response time: " + str(delta_ms) + "ms")
-        self.logger.info("rtllevel:" + str(self.rtl) + " wait time: " + str(self.wait_time) + "ms")
+        self.logger.info("rtllevel:" + str(self.rtl) + " wait time: " + str(delta_ms) + "ms")

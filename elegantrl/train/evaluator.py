@@ -3,6 +3,10 @@ import time
 import torch
 import numpy as np
 from my_common.utils import make_dir
+from my_common.utils import get_logger
+import logging
+
+logger = get_logger('evaluator', logging.INFO)
 
 
 class Evaluator:  # [ElegantRL.2022.01.01]
@@ -218,11 +222,13 @@ def get_episode_return_and_step_and_success_rate_and_more_provision_and_variance
     episode_step = None
     episode_return = 0.0  # sum of rewards in an episode
     for episode_step in range(max_step):
+        logger.debug('state' + str(state))
         s_tensor = torch.as_tensor(state, dtype=torch.float32, device=device).unsqueeze(0)
         a_tensor = act(s_tensor)
         if if_discrete:
             a_tensor = a_tensor.argmax(dim=1)
         action = (a_tensor.detach().cpu().numpy()[0])  # not need detach(), because using torch.no_grad() outside
+        # logger.debug('action' + str(env.action_probability_to_number(action)))
         state, reward, done, _ = env.step(action)
         episode_return += reward
         if done:

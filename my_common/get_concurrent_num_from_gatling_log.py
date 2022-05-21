@@ -5,7 +5,7 @@ import csv
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-csv_path = "../server/edf_threshold_request_record.csv"
+csv_path = "../server/ppo_request_record.csv"
 data = pd.read_csv(csv_path, header=0)
 
 time_data = []

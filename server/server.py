@@ -3,6 +3,7 @@ from flask import Flask
 from buffer_fifo import BufferFIFO
 from buffer_edf import BufferEDF
 from buffer_edf_threshold import BufferEDFThreshold
+from buffer_PPO import BufferPPO
 import time
 import csv
 from threading import Thread
@@ -12,6 +13,18 @@ from request import Request
 app = Flask(__name__)
 
 with open('request_record.csv', 'w', newline='') as f:
+    f_csv = csv.writer(f)
+    f_csv.writerow(['arrive_time', 'request_id', 'rtl'])
+
+with open('edf_threshold_request_record.csv', 'w', newline='') as f:
+    f_csv = csv.writer(f)
+    f_csv.writerow(['arrive_time', 'request_id', 'rtl'])
+
+with open('edf_request_record.csv', 'w', newline='') as f:
+    f_csv = csv.writer(f)
+    f_csv.writerow(['arrive_time', 'request_id', 'rtl'])
+
+with open('ppo_request_record.csv', 'w', newline='') as f:
     f_csv = csv.writer(f)
     f_csv.writerow(['arrive_time', 'request_id', 'rtl'])
 
@@ -51,8 +64,8 @@ def complete_task_ppo(task_id, rtl):
     event = threading.Event()
     now_time = datetime.datetime.now()
     req = Request(now_time.timestamp(), task_id, int(rtl), event)
-    save_arrive_time_and_task_id_and_rtl_to_csv('ppo' + task_id, rtl, now_time.strftime('%Y-%m-%d %H:%M:%S.%f'))
-    BufferFIFO.get_instance().produce(req)
+    save_arrive_time_and_task_id_and_rtl_to_csv('ppo', task_id, rtl, now_time.strftime('%Y-%m-%d %H:%M:%S.%f'))
+    BufferPPO.get_instance().produce(req)
     event.wait()
     if req.is_success:
         return {

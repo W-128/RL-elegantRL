@@ -2,6 +2,7 @@ import pandas as pd
 import os
 import datetime
 
+
 def get_arrive_time_request_dic():
     '''
     将数据集转换为arriveTime_request_dic
@@ -31,6 +32,7 @@ def get_arrive_time_request_dic():
             arriveTime_request_dic[request_in_dic['arrive_time']] = [request_in_dic]
     return new_arrive_request_in_dic, arriveTime_request_dic
 
+
 def get_arrive_time_request_dic_from_request_record():
     '''
     将数据集转换为arriveTime_request_dic
@@ -42,7 +44,8 @@ def get_arrive_time_request_dic_from_request_record():
     new_arrive_request_in_dic_temp = []
     curPath = os.path.abspath(os.path.dirname(__file__))
     rootPath = os.path.split(curPath)[0]
-    filename = rootPath + '/server/edf_threshold_request_record.csv'
+    method_name = 'ppo'
+    filename = rootPath + '/server/log/' + method_name + '_request_record.csv'
     data = pd.read_csv(filename, header=0)
 
     for i in range(0, len(data)):
