@@ -1,18 +1,24 @@
 import time
 import datetime
+import sys
+import os
+import logging
+from apscheduler.schedulers.blocking import BlockingScheduler
+
+curPath = os.path.abspath(os.path.dirname(__file__))
+rootPath = os.path.split(curPath)[0]
+sys.path.append(rootPath)
 # from elegantrl.envs.request_env_no_sim_for_server import RequestEnvNoSim
 import threading
-from test_env import Env
+from elegantrl.envs.request_env_no_sim_for_server import RequestEnvNoSimForServer
 from threading import Thread
 from concurrent.futures import ThreadPoolExecutor
+from my_common.utils import get_logger
 import queue
 from request import Request
-import logging
-
 
 class BufferFIFO:
     BUFFER_FIFO_INSTANCE = None
-    env = None
     lock = threading.Lock()
     boss_thread_pool = ThreadPoolExecutor(max_workers=1)
     queue = queue.Queue()
@@ -20,8 +26,9 @@ class BufferFIFO:
     worker_thread_pool = ThreadPoolExecutor(max_workers=50)
 
     def __init__(self) -> None:
-        self.env = Env()
-        t = Thread(target=self.consume)
+        self.scheduler = BlockingScheduler()
+        self.scheduler.add_job(func=self.advance_clock, trigger='interval', seconds=1)
+        t=Thread(target=self.scheduler.start)
         t.start()
 
     @staticmethod
@@ -36,20 +43,16 @@ class BufferFIFO:
     def produce(self, req):
         self.queue.put(req)
 
-    def consume(self):
-        while True:
-            remain_submit_times = self.request_threshold
-            while (remain_submit_times > 0):
-                if self.queue.qsize != 0:
-                    req = self.queue.get()
-                    wait_time_ms = int((datetime.datetime.now().timestamp() - req.start_time) * 1000)
-                    req.set_wait_time(wait_time_ms)
-                    if wait_time_ms > req.rtl * 1000:
-                        req.is_success = False
-                    else:
-                        self.worker_thread_pool.submit(req.run)
-                        remain_submit_times = remain_submit_times - 1
-                    req.event.set()
-                else:
-                    break
-            time.sleep(1)
+    def advance_clock(self):
+        remain_submit_times = self.request_threshold
+        while (remain_submit_times > 0):
+            if self.queue.qsize != 0:
+                req = self.queue.get()
+                submit_time_ms = datetime.datetime.now().timestamp()
+                req.set_submit_time(submit_time_ms)
+                self.worker_thread_pool.submit(req.run)
+                remain_submit_times = remain_submit_times - 1
+                req.event.set()
+            else:
+                break
+

@@ -7,15 +7,16 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import datetime
 #接收到的总请求数量
-method_name = 'ppo'
+method_name = 'fifo'
 request_record_csv_file = 'log/' + method_name + '_request_record.csv'
-request_record_csv = pd.read_csv(method_name + '_request_record.csv', header=0)
+request_record_csv = pd.read_csv(request_record_csv_file, header=0)
 
 log_file_path = 'log/request_' + method_name + '.log'
-log = open('log/request.log', mode='r').readlines()
+log = open(log_file_path, mode='r').readlines()
 
 success_rate = len(log) * 100.0 / len(request_record_csv)
-print('成功率：{:.1f}%'.format(success_rate))
+if method_name != 'fifo':
+    print('成功率：{:.1f}%'.format(success_rate))
 
 more_provision_request_num = 0
 more_provision_request_sum = 0
@@ -52,7 +53,10 @@ for i in range(len(log)):
         response_time_bigger_than_rtl_sum += 1
 
 # print('more_provision_request_sum' + str(more_provision_request_num))
-print('response_time_bigger_than_rtl_sum' + str(response_time_bigger_than_rtl_sum))
+if method_name!='fifo':
+    print('response_time_bigger_than_rtl_sum' + str(response_time_bigger_than_rtl_sum))
+else:
+    print('成功率：{:.1f}%'.format(100.0*(len(log)-response_time_bigger_than_rtl_sum)/len(log)))
 # print('超供总量：' + str(more_provision_request_sum))
 print('超供率：{:.1f}%'.format(more_provision_request_num / len(request_record_csv) * 100))
 print('超供程度：{:.1f}%'.format(np.mean(more_provision_degree_list) * 100))
@@ -101,5 +105,5 @@ for rtl in rtl_respond_time_dic.keys():
     plt.plot(x, sup_line, color='black', linestyle='--', linewidth='1')
 
     plt.legend()
-    plt.savefig("more_provision_"+method_name)
+    plt.savefig("more_provision_" + method_name)
     # plt.show()

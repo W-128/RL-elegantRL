@@ -1,10 +1,9 @@
-import time
-import datetime
 import sys
 import os
 import logging
 from apscheduler.schedulers.blocking import BlockingScheduler
 import torch
+import numpy as np
 
 curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = os.path.split(curPath)[0]
@@ -60,9 +59,26 @@ class BufferPPO:
         # 获取环境值
         state = self.env.get_state_for_RL()
         self.logger.debug('state' + str(state))
-        # actor得到action
-        s_tensor = torch.as_tensor(state, dtype=torch.float32).unsqueeze(0)
-        a_tensor = self.act(s_tensor)
-        action = a_tensor.detach().cpu().numpy()[0]
+        if self.use_edf(state):
+            action = [0] * self.env.action_dim
+            if state[0] != 0:
+                if state[0] <= 1:
+                    action[0] = 1
+                else:
+                    action[0] = self.env.threshold / state[0]
+        else:
+            # actor得到action
+            s_tensor = torch.as_tensor(state, dtype=torch.float32).unsqueeze(0)
+            a_tensor = self.act(s_tensor)
+            action = a_tensor.detach().cpu().numpy()[0]
         self.env.do_action(action)
         self.logger.debug('action' + str(self.env.action_probability_to_number(action)))
+   
+    def use_edf(self,state):
+        num_state = []
+        for s in state:
+            if s != 0:
+                num_state.append(s * self.env.threshold)
+        if np.mean(num_state) <= self.env.threshold * (1.0 / 4.0):
+            return True
+        return False

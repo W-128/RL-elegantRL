@@ -48,13 +48,9 @@ class BufferEDF:
         self.env.produce(req)
 
     def advance_clock(self):
-            # 获取环境值
-            # t1 = datetime.datetime.now().timestamp()
         self.env.advance_clock()
         self.worker_thread_pool.submit(self.consume)
-            # t2 = datetime.datetime.now().timestamp()
-            # self.logger.debug('一次交互的用时：' + str(t2 - t1) + 's')
-            # BufferEDF.delayMicrosecond(999800)
+
 
     def consume(self):
         # self.logger.debug("consume被执行的时间：" + str(datetime.datetime.now()))
@@ -65,11 +61,4 @@ class BufferEDF:
         # self.logger.debug('action' + str(action))
         self.env.do_action(action)
 
-    @staticmethod
-    def delayMicrosecond(t):  # 微秒级延时函数
-        start, end = 0, 0  # 声明变量
-        start = time.time()  # 记录开始时间
-        t = (t - 3) / 1000000  # 将输入t的单位转换为秒，-3是时间补偿
-        while end - start < t:  # 循环至时间差值大于或等于设定值时
-            end = time.time()  # 记录结束时间
 

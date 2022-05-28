@@ -15,7 +15,7 @@ from elegantrl.train.config import Arguments
 from elegantrl.envs.request_env_no_sim import RequestEnvNoSim
 from elegantrl.train.evaluator import \
     get_episode_return_and_step_and_success_rate_and_more_provision_and_variance_and_more_than_threshold_rate
-"""custom env"""
+from baseline.agent import EDF
 
 
 class RequestEnvNoSimWrapper():
@@ -33,6 +33,7 @@ class RequestEnvNoSimWrapper():
         self.env.more_than_threshold_penalty_scale = more_than_threshold_penalty_scale
         self.env.invalid_action_optim = True
         self.env.avoid_more_than_threshold = True
+        self.threshold=self.env.threshold
 
     def reset(self):
         reset_state = np.asarray(self.env.reset(), dtype=np.float32) / self.env.threshold
@@ -87,10 +88,12 @@ def evaluate_agent():
 
     act.load_state_dict(torch.load(actor_path, map_location=lambda storage, loc: storage))
 
-    eval_times = 4
+    edf_agent = EDF(env.action_dim)
+
+    eval_times = 1
     r_s_success_rate_more_provision_variance_more_than_threshold_rate_sla_violate_ary = [
         get_episode_return_and_step_and_success_rate_and_more_provision_and_variance_and_more_than_threshold_rate(
-            env, act) for _ in range(eval_times)
+            env, act, edf_agent) for _ in range(eval_times)
     ]
     r_s_success_rate_more_provision_variance_more_than_threshold_rate_sla_violate_ary = np.array(
         r_s_success_rate_more_provision_variance_more_than_threshold_rate_sla_violate_ary, dtype=np.float32)

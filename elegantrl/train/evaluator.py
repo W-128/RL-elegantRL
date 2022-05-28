@@ -213,21 +213,32 @@ def get_episode_s_tensor_list_and_a_tensor_list(env, act) -> (float, int):  # [E
 
 
 def get_episode_return_and_step_and_success_rate_and_more_provision_and_variance_and_more_than_threshold_rate(
-        env, act) -> (float, int, float, float, float, float, float):  # [ElegantRL.2022.01.01]
+        env, act, edf_agent) -> (float, int, float, float, float, float, float):  # [ElegantRL.2022.01.01]
     max_step = env.max_step
     if_discrete = env.if_discrete
     device = next(act.parameters()).device  # net.parameters() is a Python generator.
 
+    # 如果state的各个元素平均值< threshold*2/3 用edf
     state = env.reset()
     episode_step = None
     episode_return = 0.0  # sum of rewards in an episode
     for episode_step in range(max_step):
         logger.debug('state' + str(state))
-        s_tensor = torch.as_tensor(state, dtype=torch.float32, device=device).unsqueeze(0)
-        a_tensor = act(s_tensor)
-        if if_discrete:
-            a_tensor = a_tensor.argmax(dim=1)
-        action = (a_tensor.detach().cpu().numpy()[0])  # not need detach(), because using torch.no_grad() outside
+        if use_edf(state, env):
+            action = [0] * env.action_dim
+            if state[0] != 0:
+                if state[0] <= 1:
+                    action[0] = 1
+                else:
+                    action[0] = env.threshold / state[0]
+
+        else:
+            s_tensor = torch.as_tensor(state, dtype=torch.float32, device=device).unsqueeze(0)
+            a_tensor = act(s_tensor)
+            if if_discrete:
+                a_tensor = a_tensor.argmax(dim=1)
+            action = (a_tensor.detach().cpu().numpy()[0])  # not need detach(), because using torch.no_grad() outside
+
         # logger.debug('action' + str(env.action_probability_to_number(action)))
         state, reward, done, _ = env.step(action)
         episode_return += reward
@@ -243,6 +254,16 @@ def get_episode_return_and_step_and_success_rate_and_more_provision_and_variance
     episode_variance = env.get_submit_request_num_per_second_variance()
     episode_more_than_threshold_rate = env.get_more_than_threshold_rate() * 100
     return episode_return, episode_step, episode_success_rate, episode_more_provision_degree, episode_more_provision_rate, episode_more_provision_mean, episode_more_provision_sum, episode_variance, episode_more_than_threshold_rate
+
+
+def use_edf(state, env):
+    num_state = []
+    for s in state:
+        if s != 0:
+            num_state.append(s * env.threshold)
+    if np.mean(num_state) <= env.threshold * (1.0 / 4.0):
+        return True
+    return False
 
 
 def save_learning_curve(
