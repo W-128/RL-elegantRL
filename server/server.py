@@ -12,9 +12,6 @@ from request import Request
 
 app = Flask(__name__)
 
-with open('request_record.csv', 'w', newline='') as f:
-    f_csv = csv.writer(f)
-    f_csv.writerow(['arrive_time', 'request_id', 'rtl'])
 
 with open('edf_threshold_request_record.csv', 'w', newline='') as f:
     f_csv = csv.writer(f)
@@ -28,6 +25,9 @@ with open('ppo_request_record.csv', 'w', newline='') as f:
     f_csv = csv.writer(f)
     f_csv.writerow(['arrive_time', 'request_id', 'rtl'])
 
+with open('fifo_request_record.csv', 'w', newline='') as f:
+    f_csv = csv.writer(f)
+    f_csv.writerow(['arrive_time', 'request_id', 'rtl'])
 
 def print_task_id(task_id, rtl):
     print(task_id)

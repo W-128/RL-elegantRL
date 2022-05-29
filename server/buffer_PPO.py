@@ -71,6 +71,7 @@ class BufferPPO:
             s_tensor = torch.as_tensor(state, dtype=torch.float32).unsqueeze(0)
             a_tensor = self.act(s_tensor)
             action = a_tensor.detach().cpu().numpy()[0]
+            
         self.env.do_action(action)
         self.logger.debug('action' + str(self.env.action_probability_to_number(action)))
    

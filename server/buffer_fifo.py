@@ -17,6 +17,7 @@ from my_common.utils import get_logger
 import queue
 from request import Request
 
+
 class BufferFIFO:
     BUFFER_FIFO_INSTANCE = None
     lock = threading.Lock()
@@ -26,9 +27,10 @@ class BufferFIFO:
     worker_thread_pool = ThreadPoolExecutor(max_workers=50)
 
     def __init__(self) -> None:
+        self.unserved_time_up_bound = 20
         self.scheduler = BlockingScheduler()
         self.scheduler.add_job(func=self.advance_clock, trigger='interval', seconds=1)
-        t=Thread(target=self.scheduler.start)
+        t = Thread(target=self.scheduler.start)
         t.start()
 
     @staticmethod
@@ -49,10 +51,12 @@ class BufferFIFO:
             if self.queue.qsize != 0:
                 req = self.queue.get()
                 submit_time_ms = datetime.datetime.now().timestamp()
-                req.set_submit_time(submit_time_ms)
-                self.worker_thread_pool.submit(req.run)
-                remain_submit_times = remain_submit_times - 1
+                if submit_time_ms - req.start_time <= self.unserved_time_up_bound:
+                    req.set_submit_time(submit_time_ms)
+                    self.worker_thread_pool.submit(req.run)
+                    remain_submit_times = remain_submit_times - 1
+                else:
+                    req.is_success = False
                 req.event.set()
             else:
                 break
-

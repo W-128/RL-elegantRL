@@ -4,6 +4,7 @@ import datetime
 from datetime import timedelta
 from concurrent.futures import ThreadPoolExecutor
 import numpy as np
+import queue
 
 curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = os.path.split(curPath)[0]
@@ -19,6 +20,7 @@ class RequestEnvNoSimForServer:
     logger = get_logger('RequestEnvNoSimForServer', logging.INFO)
 
     def __init__(self, task_num, action_is_probability):
+        self.unserved_time_up_bound=20
         self.current_time = datetime.datetime.now().replace(microsecond=0)
         self.state_record = []
         if task_num == 2:
@@ -37,6 +39,7 @@ class RequestEnvNoSimForServer:
         self.bucket_dic = {}
         self.action_is_probability = action_is_probability
         self.worker_thread_pool = ThreadPoolExecutor(max_workers=60)
+        self.violate_request_queue = queue.Queue()
 
     # 全局时钟向前一步
     def advance_clock(self):
@@ -64,20 +67,32 @@ class RequestEnvNoSimForServer:
                 req = self.bucket_dic[self.current_time + timedelta(seconds=remaining_time)].get_a_request()
                 submit_time_ms = datetime.datetime.now().timestamp()
                 req.set_submit_time(submit_time_ms)
-                # RequestEnvNoSimForServer.logger.debug('提交任务，任务到达时间为：' +
-                #                                      str(datetime.datetime.utcfromtimestamp(req.start_time)) +
-                #                                      '全局时钟现在的时间是: ' + str(self.current_time))
-                # req.set_wait_time(wait_time_ms)
                 self.worker_thread_pool.submit(req.run)
                 req.event.set()
+
+        # 提交量不足阈值时提交已经违约的
+        if np.sum(action) < self.threshold:
+            remain_submit_times = self.threshold - np.sum(action)
+            while (remain_submit_times != 0):
+                if self.violate_request_queue.qsize() == 0:
+                    break
+                else:
+                    req = self.violate_request_queue.get()
+                    submit_time_ms = datetime.datetime.now().timestamp()
+                    if submit_time_ms - req.start_time <= self.unserved_time_up_bound:
+                        req.set_submit_time(submit_time_ms)
+                        self.worker_thread_pool.submit(req.run)
+                        remain_submit_times -= 1
+                    else:
+                        req.is_success = False
+                    req.event.set()
 
         del_expire_time_list = []
         for expire_time in self.bucket_dic:
             if expire_time <= self.current_time:
                 while self.bucket_dic[expire_time].get_q_size() != 0:
                     req = self.bucket_dic[expire_time].get_a_request()
-                    req.is_success = False
-                    req.event.set()
+                    self.violate_request_queue.put(req)
                 del_expire_time_list.append(expire_time)
         for del_expire_time in del_expire_time_list:
             bucket = self.bucket_dic.pop(del_expire_time)
