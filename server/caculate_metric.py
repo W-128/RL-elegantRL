@@ -10,7 +10,7 @@ import math
 from matplotlib.pyplot import MultipleLocator
 
 
-method_name = 'ppo'
+method_name = 'fifo'
 #接收到的总请求数量
 request_record_csv_file = 'log/unserved_violate/' + method_name + '_request_record.csv'
 # request_record_csv = pd.read_csv( method_name + '_request_record.csv', header=0)
@@ -123,12 +123,17 @@ for rtl in rtl_respond_time_dic.keys():
     plt.plot(list(range(len(timeData)))[:-1], rtl_avg_response_time_dic[rtl][:-1], color=line.get_color(), lw=1.5, label=rtl_tanent_dit[rtl]+' Response Time')
     # 辅助线
     sup_line = [rtl for i in range(len(dayIndex))]
-    plt.plot(list(range(len(timeData)))[:-1], sup_line[:-1], color=line.get_color(), linestyle='--', linewidth='1', label=rtl_tanent_dit[rtl]+' Response Time SLA')
+    plt.plot(list(range(len(timeData)))[:-1], sup_line[:-1], color=line.get_color(), linestyle='--', linewidth='2', label=rtl_tanent_dit[rtl]+' Response Time SLA')
 
+plt.grid(color='gray')
 ax=plt.gca()
 #ax为两条坐标轴的实例
 ax.yaxis.set_major_locator(y_major_locator)
+ax.spines['right'].set_color('gray')
+ax.spines['left'].set_color('gray')
+ax.spines['top'].set_color('gray')
+ax.spines['bottom'].set_color('gray')
 plt.legend(loc='upper right', fontsize=8) # 标签位置
 plt.xlim(-0.5)
 plt.ylim(-0.5,20)
-plt.savefig("more_provision_" + method_name,dpi=400)
+plt.savefig("log/unserved_violate/more_provision_" + method_name,dpi=400,bbox_inches='tight', transparent=True)
