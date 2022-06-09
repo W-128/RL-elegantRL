@@ -14,7 +14,7 @@ sys.path.append(curPath)
 from bucket import Bucket
 import logging
 from my_common.utils import get_logger
-
+import math
 
 class RequestEnvNoSimForServer:
     logger = get_logger('RequestEnvNoSimForServer', logging.INFO)
@@ -52,15 +52,29 @@ class RequestEnvNoSimForServer:
         # number_action=(从剩余时间为0的请求中提交的请求个数, 从剩余时间为1的请求中提交的请求个数,...,从剩余时间为5的请求中提交的请求个数)
         number_action = [0] * len(probability_action)
         for index in range(len(probability_action)):
-            number_action[index] = int(round(probability_action[index] * self.state_record[index], 0))
+            number_action[index] = math.ceil(probability_action[index] * self.state_record[index])
         if number_action[0] < self.state_record[0]:
             number_action[0] = min(self.threshold, self.state_record[0])
+        if np.sum(number_action) > self.threshold:
+            need_reduce_number = np.sum(number_action) - self.threshold
+            while need_reduce_number > 0:
+                for index in range(len(number_action) - 1, -1, -1):
+                    if number_action[index] > 0:
+                        if number_action[index] > need_reduce_number:
+                            number_action[index] = number_action[index] - need_reduce_number
+                            need_reduce_number = 0
+                            break
+                        if number_action[index] < need_reduce_number:
+                            need_reduce_number -= number_action[index]
+                            number_action[index] = 0
         return number_action
 
     def do_action(self, action):
         if self.action_is_probability:
             action = self.action_probability_to_number(action)
 
+        if np.sum(action)>self.threshold:
+            self.logger.info("action总值大于threshold")
         for remaining_time in range(self.action_dim):
             # 提交任务
             for j in range(action[remaining_time]):
