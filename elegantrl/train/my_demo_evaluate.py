@@ -14,7 +14,7 @@ from elegantrl.agents import *
 from elegantrl.train.config import Arguments
 from elegantrl.envs.request_env_no_sim import RequestEnvNoSim
 from elegantrl.train.evaluator import \
-    get_episode_return_and_step_and_success_rate_and_more_provision_and_variance_and_more_than_threshold_rate
+    get_episode_return_and_step_and_metrics
 from baseline.agent import EDF
 
 
@@ -24,7 +24,7 @@ class RequestEnvNoSimWrapper():
         self.env = RequestEnvNoSim(task_num)
         self.env_num = 1
         self.env_name = 'RequestEnvNoSim'
-        self.max_step = len(self.env.new_arrive_request_in_dic
+        self.max_step = len(self.env.all_request
                             ) + self.env.state_dim  # 每个episode的最大步数（就是从 env.reset() 开始到 env.step()返回 done=True 的步数上限）
         self.state_dim = self.env.state_dim  # feature number of state
         self.action_dim = self.env.action_dim  # feature number of action
@@ -33,7 +33,7 @@ class RequestEnvNoSimWrapper():
         self.env.more_than_threshold_penalty_scale = more_than_threshold_penalty_scale
         self.env.invalid_action_optim = True
         self.env.avoid_more_than_threshold = True
-        self.threshold=self.env.threshold
+        self.threshold = self.env.threshold
 
     def reset(self):
         reset_state = np.asarray(self.env.reset(), dtype=np.float32) / self.env.threshold
@@ -44,17 +44,17 @@ class RequestEnvNoSimWrapper():
         state, reward, done, info_dict = self.env.step(action)  # state, reward, done, info_dict
         return np.asarray(state, dtype=np.float32) / self.env.threshold, reward, done, info_dict
 
-    def get_success_rate(self):
-        return self.env.get_success_rate()
+    def get_violation_rate(self):
+        return self.env.get_violation_rate()
 
-    def get_more_provision_degree(self):
-        return self.env.get_more_provision_degree()
+    def get_fail_rate(self):
+        return self.env.get_fail_rate()
 
     def get_more_provision_mean(self):
         return self.env.get_more_provision_mean()
 
-    def get_more_provision_sum(self):
-        return self.env.get_more_provision_sum()
+    def get_over_prov_rate(self):
+        return self.env.get_over_prov_rate()
 
     def get_more_than_threshold_rate(self):
         return self.env.get_more_than_threshold_rate()
@@ -88,22 +88,16 @@ def evaluate_agent():
 
     act.load_state_dict(torch.load(actor_path, map_location=lambda storage, loc: storage))
 
-    edf_agent = EDF(env.action_dim)
-
     eval_times = 1
-    r_s_success_rate_more_provision_variance_more_than_threshold_rate_sla_violate_ary = [
-        get_episode_return_and_step_and_success_rate_and_more_provision_and_variance_and_more_than_threshold_rate(
-            env, act, edf_agent) for _ in range(eval_times)
-    ]
-    r_s_success_rate_more_provision_variance_more_than_threshold_rate_sla_violate_ary = np.array(
-        r_s_success_rate_more_provision_variance_more_than_threshold_rate_sla_violate_ary, dtype=np.float32)
-    r_avg, s_avg, success_rate_avg, more_provision_degree_avg, more_provision_rate_avg, more_provision_mean_avg, more_provision_sum_avg, variance_avg, more_than_threshold_rate_avg = r_s_success_rate_more_provision_variance_more_than_threshold_rate_sla_violate_ary.mean(
+    metric_ary = [get_episode_return_and_step_and_metrics(env, act) for _ in range(eval_times)]
+    metric_ary = np.array(metric_ary, dtype=np.float32)
+    s_avg, r_avg, violation_rate_avg, fail_rate_avg, more_provision_mean_avg, over_prov_rate_avg,variance_avg, more_than_threshold_rate_avg = metric_ary.mean(
         axis=0)  # average of episode return and episode step
 
     print(
-        "奖励平均值：{:.1f}, 成功率平均值：{:.1f}%, 超供率平均值：{:.1f}%, 超供程度平均值：{:.1f}%, 超供mean平均值：{:.1f}, 超供sum平均值：{:.1f},提交量大于阈值的概率：{:.5f}%, 方差平均值：{:.1f}, 步数平均值：{:.1f}"
-        .format(r_avg, success_rate_avg, more_provision_rate_avg, more_provision_degree_avg, more_provision_mean_avg,
-                more_provision_sum_avg, more_than_threshold_rate_avg, variance_avg, s_avg))
+        "步数平均值：{:.1f}, 奖励：{:.1f}, sla违约率：{:.1f}%, sla失败率{:.1f}%, 超供均值{:.1f}, 超供面积比例：{:.1f}%, 每秒提交量方差：{:.1f},提交量大于阈值的概率：{:.5f}%"
+        .format(s_avg, r_avg, violation_rate_avg, fail_rate_avg, more_provision_mean_avg, over_prov_rate_avg*100,
+                variance_avg, more_than_threshold_rate_avg))
 
     env.print_wait_time_avg()
 

@@ -35,8 +35,8 @@ scaled_sub_df['view'] = scaled_sub_df['view'].apply(lambda x: int(x))
 
 print(np.mean(scaled_sub_df['view']))
 print(np.sum(scaled_sub_df['view']))
-# scaled_sub_df.plot()
-# plt.savefig('nasa_sample.png')
+scaled_sub_df.plot()
+plt.savefig('nasa_sample.png')
 
 plt.xlabel('time(minutes)')
 # scaled_sub_df共包含2880分钟，2880个数据点

@@ -82,6 +82,8 @@ def plot_success_rate(success_rate, plot_cfg, tag='train'):
     plt.show()
 
 
+# def plot_response_time():
+    
 def plot_waiting_time_and_require_time(success_request_dic_key_is_end_time, rtl_list, plot_cfg, tag='train'):
     sns.set()
     fig = plt.figure()

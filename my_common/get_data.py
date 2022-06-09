@@ -11,7 +11,7 @@ def get_arrive_time_request_dic():
     value=arriveTime为key的request_in_dic列表
     request_in_dic的形式为{'request_id', 'arrive_time', 'rtl', 'task_id'}
     '''
-    new_arrive_request_in_dic = []
+    all_request = []
     curPath = os.path.abspath(os.path.dirname(__file__))
     filename = curPath + '/concurrent_request_num.csv'
     data = pd.read_csv(filename, header=0)
@@ -22,15 +22,15 @@ def get_arrive_time_request_dic():
             'rtl': data.loc[i, 'rtl'],
             'task_id': 'task1'
         }
-        new_arrive_request_in_dic.append(request_in_dic)
+        all_request.append(request_in_dic)
 
     arriveTime_request_dic = {}
-    for request_in_dic in new_arrive_request_in_dic:
+    for request_in_dic in all_request:
         if request_in_dic['arrive_time'] in arriveTime_request_dic:
             arriveTime_request_dic[request_in_dic['arrive_time']].append(request_in_dic)
         else:
             arriveTime_request_dic[request_in_dic['arrive_time']] = [request_in_dic]
-    return new_arrive_request_in_dic, arriveTime_request_dic
+    return all_request, arriveTime_request_dic
 
 
 def get_arrive_time_request_dic_from_request_record():

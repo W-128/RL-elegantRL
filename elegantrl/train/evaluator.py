@@ -212,8 +212,7 @@ def get_episode_s_tensor_list_and_a_tensor_list(env, act) -> (float, int):  # [E
     return s_a_list
 
 
-def get_episode_return_and_step_and_success_rate_and_more_provision_and_variance_and_more_than_threshold_rate(
-        env, act, edf_agent) -> (float, int, float, float, float, float, float):  # [ElegantRL.2022.01.01]
+def get_episode_return_and_step_and_metrics(env, act):  # [ElegantRL.2022.01.01]
     max_step = env.max_step
     if_discrete = env.if_discrete
     device = next(act.parameters()).device  # net.parameters() is a Python generator.
@@ -246,23 +245,22 @@ def get_episode_return_and_step_and_success_rate_and_more_provision_and_variance
             break
     episode_return = getattr(env, "episode_return", episode_return)
     episode_step += 1
-    episode_success_rate = env.get_success_rate() * 100
-    episode_more_provision_degree = env.get_more_provision_degree() * 100
-    episode_more_provision_rate = env.get_more_provision_rate() * 100
+    episode_violation_rate = env.get_violation_rate() * 100
+    episode_fail_rate = env.get_fail_rate() * 100
     episode_more_provision_mean = env.get_more_provision_mean()
-    episode_more_provision_sum = env.get_more_provision_sum()
+    episode_over_prov_rate = env.get_over_prov_rate()
     episode_variance = env.get_submit_request_num_per_second_variance()
     episode_more_than_threshold_rate = env.get_more_than_threshold_rate() * 100
-    return episode_return, episode_step, episode_success_rate, episode_more_provision_degree, episode_more_provision_rate, episode_more_provision_mean, episode_more_provision_sum, episode_variance, episode_more_than_threshold_rate
+    return episode_step, episode_return, episode_violation_rate, episode_fail_rate, episode_more_provision_mean, episode_over_prov_rate, episode_variance, episode_more_than_threshold_rate
 
 
 def use_edf(state, env):
-    num_state = []
-    for s in state:
-        if s != 0:
-            num_state.append(s * env.threshold)
-    if np.mean(num_state) <= env.threshold * (1.0 / 4.0):
-        return True
+    # num_state = []
+    # for s in state:
+    #     if s != 0:
+    #         num_state.append(s * env.threshold)
+    # if np.mean(num_state) <= env.threshold * (1.0 / 3.0):
+    #     return True
     return False
 
 

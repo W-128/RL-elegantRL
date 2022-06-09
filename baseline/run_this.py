@@ -7,7 +7,7 @@ sys.path.append(rootPath)
 
 from elegantrl.envs.request_env_no_sim import RequestEnvNoSim
 from agent import RandomChoose, EDF, EDFSubmitThreshold, fifo
-from train_test import test, test_fifo
+from train_test import test
 import datetime
 import torch
 from my_common.utils import make_dir, plot_waiting_time_and_require_time
@@ -98,18 +98,18 @@ edf_config = EDFConfig()
 make_dir(edf_config.result_path)  # 创建模型路径的文件夹
 agent = EDF(env.action_dim)
 success_request_dic_key_is_end_time, rtl_list = test(edf_config, env, agent)
-plot_waiting_time_and_require_time(success_request_dic_key_is_end_time, rtl_list, edf_config)
+# plot_waiting_time_and_require_time(success_request_dic_key_is_end_time, rtl_list, edf_config)
 
 print("==========================================================")
 edf_submit_threshold_config = EDFSubmitThresholdConfig()
 make_dir(edf_submit_threshold_config.result_path)  # 创建模型路径的文件夹
 agent = EDFSubmitThreshold(env.action_dim)
 success_request_dic_key_is_end_time, rtl_list = test(edf_submit_threshold_config, env, agent)
-plot_waiting_time_and_require_time(success_request_dic_key_is_end_time, rtl_list, edf_submit_threshold_config)
+# plot_waiting_time_and_require_time(success_request_dic_key_is_end_time, rtl_list, edf_submit_threshold_config)
 
 print("==========================================================")
 fifo_config = FIFOConfig()
 make_dir(fifo_config.result_path)  # 创建模型路径的文件夹
 agent = fifo(env.action_dim)
-success_request_dic_key_is_end_time, rtl_list = test_fifo(fifo_config, env, agent)
-plot_waiting_time_and_require_time(success_request_dic_key_is_end_time, rtl_list, fifo_config)
+success_request_dic_key_is_end_time, rtl_list = test(fifo_config, env, agent)
+# plot_waiting_time_and_require_time(success_request_dic_key_is_end_time, rtl_list, fifo_config)

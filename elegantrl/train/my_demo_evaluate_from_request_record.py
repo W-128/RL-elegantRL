@@ -15,7 +15,7 @@ from elegantrl.train.config import Arguments
 from elegantrl.envs.request_env_no_sim_get_data_from_request_record import RequestEnvNoSimDataFromRequestRecord
 
 from elegantrl.train.evaluator import \
-    get_episode_return_and_step_and_success_rate_and_more_provision_and_variance_and_more_than_threshold_rate
+    get_episode_return_and_step_and_metrics
 """custom env"""
 
 
@@ -35,8 +35,9 @@ class RequestEnvNoSimWrapper():
         self.env.invalid_action_optim = True
         self.env.avoid_more_than_threshold = False
 
-    def action_probability_to_number(self,a_tensor):
+    def action_probability_to_number(self, a_tensor):
         return self.env.action_probability_to_number(a_tensor)
+
     def reset(self):
         reset_state = np.asarray(self.env.reset(), dtype=np.float32) / self.env.threshold
         return reset_state
@@ -88,13 +89,14 @@ def evaluate_agent():
     one_task_actor_path = 'RequestEnvNoSim0.85_PPO_0/actor_01328267_05668.068.pth'
     one_task_actor_path_end_reward_1 = 'RequestEnvNoSim0.8_PPO_0/actor_00975952_05888.821.pth'
     actor_path = str(task_num) + '-task-end_reward=1/' + one_task_actor_path_end_reward_1
+    train_actor_path = 'RequestEnvNoSim0.8_PPO_0/actor_03443502_04748.414.pth'
+    actor_path = train_actor_path
 
     act.load_state_dict(torch.load(actor_path, map_location=lambda storage, loc: storage))
 
     eval_times = 4
     r_s_success_rate_more_provision_variance_more_than_threshold_rate_sla_violate_ary = [
-        get_episode_return_and_step_and_success_rate_and_more_provision_and_variance_and_more_than_threshold_rate(
-            env, act) for _ in range(eval_times)
+        get_episode_return_and_step_and_metrics(env, act) for _ in range(eval_times)
     ]
     r_s_success_rate_more_provision_variance_more_than_threshold_rate_sla_violate_ary = np.array(
         r_s_success_rate_more_provision_variance_more_than_threshold_rate_sla_violate_ary, dtype=np.float32)
