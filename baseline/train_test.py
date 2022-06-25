@@ -1,12 +1,17 @@
+from torch import threshold
+
+
 def test(cfg, env, agent):
     print('开始测试！')
     print(f'环境：{cfg.env_name}, 算法：{cfg.algo_name}')
     ep_reward = 0  # 记录每个episode的reward
+    threshold=env.threshold
+    # threshold=30
     if cfg.algo_name == 'fifo':
         active_request_group_by_remaining_time_list = env.reset_fifo()  # 重置环境, 重新开一局（即开始新的一个回合）
         while True:
             submit_request_id_list = agent.predict(active_request_group_by_remaining_time_list,
-                                                   env.threshold)  # 根据算法选择一个动作
+                                                   threshold)  # 根据算法选择一个动作
             next_active_request_group_by_remaining_time_list, reward, done, _ = env.step_fifo(
                 submit_request_id_list)  # 与环境进行一个交互
             active_request_group_by_remaining_time_list = next_active_request_group_by_remaining_time_list  # 更新状态
@@ -16,7 +21,7 @@ def test(cfg, env, agent):
     else:
         state = env.reset()  # 重置环境, 重新开一局（即开始新的一个回合）
         while True:
-            action = agent.predict(state, env.threshold)  # 根据算法选择一个动作
+            action = agent.predict(state, threshold)  # 根据算法选择一个动作
             next_state, reward, done, _ = env.step(action)  # 与环境进行一个交互
             state = next_state  # 更新状态
             ep_reward += reward

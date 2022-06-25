@@ -24,7 +24,7 @@ class RequestEnvNoSimWrapper():
                             ) + self.env.state_dim  # 每个episode的最大步数（就是从 env.reset() 开始到 env.step()返回 done=True 的步数上限）
         self.state_dim = self.env.state_dim  # feature number of state
         self.action_dim = self.env.action_dim  # feature number of action
-        self.target_return = 5200
+        self.target_return = 6000
         self.if_discrete = False
 
     def reset(self):
@@ -36,14 +36,17 @@ class RequestEnvNoSimWrapper():
         state, reward, done, info_dict = self.env.step(action)  # state, reward, done, info_dict
         return np.asarray(state, dtype=np.float32) / self.env.threshold, reward, done, info_dict
 
-    def get_success_rate(self):
-        return self.env.get_success_rate()
+    def get_violation_rate(self):
+        return self.env.get_violation_rate()
 
-    def get_more_provision_degree(self):
-        return self.env.get_more_provision_degree()
+    def get_fail_rate(self):
+        return self.env.get_fail_rate()
 
     def get_more_provision_mean(self):
         return self.env.get_more_provision_mean()
+
+    def get_over_prov_rate(self):
+        return self.env.get_over_prov_rate()
 
     def get_more_than_threshold_rate(self):
         return self.env.get_more_than_threshold_rate()
@@ -57,6 +60,11 @@ class RequestEnvNoSimWrapper():
     def get_more_provision_rate(self):
         return self.env.get_more_provision_rate()
 
+    def get_success_request(self):
+        return self.env.get_success_request()
+
+    def get_success_request_dic_key_is_end_time_and_rtl_list(self):
+        return self.env.get_success_request_dic_key_is_end_time_and_rtl_list()
 
 def continuous_action_on_policy(gamma=0.9):
     gpu_id = 0  # >=0 means GPU ID, -1 means CPU
@@ -64,7 +72,7 @@ def continuous_action_on_policy(gamma=0.9):
     #流程任务数
     task_num = 1
     env = RequestEnvNoSimWrapper(gamma, task_num)
-    env.invalid_action_optim = False
+    env.action_optim = False
     agent = [AgentPPO, AgentPPO_H][drl_id]
 
     print("agent", agent.__name__)
@@ -72,7 +80,7 @@ def continuous_action_on_policy(gamma=0.9):
     print("env_name", env.env_name)
     args = Arguments(agent, env=env)
     args.gamma = gamma
-    args.env.target_return = 5200  # set target_reward manually for env 'Pendulum-v0'
+    args.env.target_return = 6000  # set target_reward manually for env 'Pendulum-v0'
     args.learner_gpus = gpu_id
     args.random_seed += gpu_id
 

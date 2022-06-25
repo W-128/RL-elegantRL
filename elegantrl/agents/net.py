@@ -378,7 +378,8 @@ class ActorPPO(nn.Module):
         self.sqrt_2pi_log = np.log(np.sqrt(2 * np.pi))
 
     def forward(self, state):
-        return nn.Sigmoid()(self.net(state))  # action.sigmoid()
+        softmax_1 = nn.Softmax(dim=1)
+        return softmax_1(self.net(state))
 
     def get_action(self, state):
         a_avg = self.net(state)
@@ -412,8 +413,9 @@ class ActorPPO(nn.Module):
         return -(self.a_std_log + self.sqrt_2pi_log + delta).sum(1)  # old_logprob
 
     @staticmethod
-    def get_a_to_e(action):
-        return action.tanh()
+    def convert_action_for_env(action):
+        softmax_1 = nn.Softmax(dim=1)
+        return softmax_1(action)
 
 
 class ActorDiscretePPO(nn.Module):

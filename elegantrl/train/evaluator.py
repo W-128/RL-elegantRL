@@ -79,13 +79,14 @@ class Evaluator:  # [ElegantRL.2022.01.01]
                     print(f"{self.agent_id:<3}{self.total_step:8.2e}{self.r_max:8.2f} |",
                           file=f)  # save policy and print
                     """打印现在的无超阈值惩罚奖励以及各个评估指标"""
-                    print("成功率：{:.1f}%, 提交量大于阈值的概率：{:.5f}%, 超供率：{:.1f}%, 超供程度：{:.1f}%, 超供平均值：{:.1f}, 方差：{:.1f}".format(
-                        self.eval_env.get_success_rate() * 100,
-                        self.eval_env.get_more_than_threshold_rate() * 100,
-                        self.eval_env.get_more_provision_rate() * 100,
-                        self.eval_env.get_more_provision_degree() * 100, self.eval_env.get_more_provision_mean(),
-                        self.eval_env.get_submit_request_num_per_second_variance()),
-                          file=f)
+                    print("sla违约率：{:.1f}%, sla失败率：{:.1f}%, 超供均值：{:.1f}, 超供面积比例：{:.1f}%, 每秒提交量方差：{:.1f}, 提交量大于阈值的概率：{:.4f}"
+                        .format(self.eval_env.get_violation_rate() * 100,
+                                self.eval_env.get_fail_rate() * 100,
+                                self.eval_env.get_more_provision_mean(),
+                                self.eval_env.get_over_prov_rate() * 100,
+                                self.eval_env.get_submit_request_num_per_second_variance(),
+                                self.eval_env.get_more_than_threshold_rate() * 100),
+                        file=f)
             """record the training information"""
             self.recorder.append((self.total_step, r_avg, r_std, r_exp, *log_tuple))  # update recorder
             """print some information to Terminal"""
@@ -248,7 +249,7 @@ def get_episode_return_and_step_and_metrics(env, act):  # [ElegantRL.2022.01.01]
     episode_violation_rate = env.get_violation_rate() * 100
     episode_fail_rate = env.get_fail_rate() * 100
     episode_more_provision_mean = env.get_more_provision_mean()
-    episode_over_prov_rate = env.get_over_prov_rate()
+    episode_over_prov_rate = env.get_over_prov_rate() * 100
     episode_variance = env.get_submit_request_num_per_second_variance()
     episode_more_than_threshold_rate = env.get_more_than_threshold_rate() * 100
     return episode_step, episode_return, episode_violation_rate, episode_fail_rate, episode_more_provision_mean, episode_over_prov_rate, episode_variance, episode_more_than_threshold_rate

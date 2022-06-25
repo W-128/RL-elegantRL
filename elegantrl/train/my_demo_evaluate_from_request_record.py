@@ -32,7 +32,7 @@ class RequestEnvNoSimWrapper():
         self.target_return = 270
         self.if_discrete = False
         self.env.more_than_threshold_penalty_scale = more_than_threshold_penalty_scale
-        self.env.invalid_action_optim = True
+        self.env.action_optim = True
         self.env.avoid_more_than_threshold = False
 
     def action_probability_to_number(self, a_tensor):

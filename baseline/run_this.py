@@ -40,6 +40,7 @@ env = RequestEnvNoSim(task_num)
 THRESHOLD = env.threshold
 
 env.action_is_probability = False
+env.need_evaluate_env_correct = True
 
 
 class RandomChooseConfig:

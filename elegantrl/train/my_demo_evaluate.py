@@ -31,7 +31,7 @@ class RequestEnvNoSimWrapper():
         self.target_return = 270
         self.if_discrete = False
         self.env.more_than_threshold_penalty_scale = more_than_threshold_penalty_scale
-        self.env.invalid_action_optim = True
+        self.env.action_optim = True
         self.env.avoid_more_than_threshold = True
         self.threshold = self.env.threshold
 
@@ -83,20 +83,20 @@ def evaluate_agent():
     args = Arguments(agent, env=env)
     act = agent(args.net_dim, env.state_dim, env.action_dim).act
     two_task_actor_path = 'RequestEnvNoSim0.95_PPO_0/actor_04752485_05638.627.pth'
-    one_task_actor_path = 'RequestEnvNoSim0.8_PPO_0/actor_00975952_05888.821.pth'
-    actor_path = str(task_num) + '-task-end_reward=1/' + one_task_actor_path
-
+    one_task_actor_path = 'RequestEnvNoSim0.8_PPO_0/actor_00230880_01924.799.pth'
+    actor_path =  one_task_actor_path
+    # actor_path='actor_00975952_05888.821.pth'
     act.load_state_dict(torch.load(actor_path, map_location=lambda storage, loc: storage))
 
     eval_times = 1
     metric_ary = [get_episode_return_and_step_and_metrics(env, act) for _ in range(eval_times)]
     metric_ary = np.array(metric_ary, dtype=np.float32)
-    s_avg, r_avg, violation_rate_avg, fail_rate_avg, more_provision_mean_avg, over_prov_rate_avg,variance_avg, more_than_threshold_rate_avg = metric_ary.mean(
+    s_avg, r_avg, violation_rate_avg, fail_rate_avg, more_provision_mean_avg, over_prov_rate_avg, variance_avg, more_than_threshold_rate_avg = metric_ary.mean(
         axis=0)  # average of episode return and episode step
 
     print(
         "步数平均值：{:.1f}, 奖励：{:.1f}, sla违约率：{:.1f}%, sla失败率{:.1f}%, 超供均值{:.1f}, 超供面积比例：{:.1f}%, 每秒提交量方差：{:.1f},提交量大于阈值的概率：{:.5f}%"
-        .format(s_avg, r_avg, violation_rate_avg, fail_rate_avg, more_provision_mean_avg, over_prov_rate_avg*100,
+        .format(s_avg, r_avg, violation_rate_avg, fail_rate_avg, more_provision_mean_avg, over_prov_rate_avg * 100,
                 variance_avg, more_than_threshold_rate_avg))
 
     env.print_wait_time_avg()

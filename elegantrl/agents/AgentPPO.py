@@ -1,5 +1,6 @@
 import numpy as np
 import torch
+import torch.nn as nn
 from elegantrl.agents.net import ActorPPO, ActorDiscretePPO, CriticPPO, SharePPO
 from elegantrl.agents.AgentBase import AgentBase
 from typing import Tuple
@@ -61,18 +62,16 @@ class AgentPPO(AgentBase):
             0,
         ]
         state = self.states[0]
-
         step_i = 0
         done = False
         get_action = self.act.get_action
-        get_a_to_e = self.act.get_a_to_e
+        convert = self.act.convert_action_for_env
         while step_i < target_step or not done:
             ten_s = torch.as_tensor(state, dtype=torch.float32).unsqueeze(0)
             ten_a, ten_n = [
                 ten.cpu() for ten in get_action(ten_s.to(self.device))
             ]  # different
-            next_s, reward, done, _ = env.step(torch.nn.Sigmoid()(ten_a)[0].numpy())
-
+            next_s, reward, done, _ = env.step(convert(ten_a)[0].numpy())
             traj_list.append((ten_s, reward, done, ten_a, ten_n))  # different
 
             step_i += 1
