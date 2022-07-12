@@ -24,7 +24,7 @@ class RequestEnvNoSimWrapper():
                             ) + self.env.state_dim  # 每个episode的最大步数（就是从 env.reset() 开始到 env.step()返回 done=True 的步数上限）
         self.state_dim = self.env.state_dim  # feature number of state
         self.action_dim = self.env.action_dim  # feature number of action
-        self.target_return = 5200
+        self.target_return = 6000
         self.if_discrete = False
 
     def reset(self):
@@ -72,7 +72,7 @@ def continuous_action_on_policy(gamma=0.9):
     print("env_name", env.env_name)
     args = Arguments(agent, env=env)
     args.gamma = gamma
-    args.env.target_return = 5200  # set target_reward manually for env 'Pendulum-v0'
+    args.env.target_return = 6000  # set target_reward manually for env 'Pendulum-v0'
     args.learner_gpus = gpu_id
     args.random_seed += gpu_id
 

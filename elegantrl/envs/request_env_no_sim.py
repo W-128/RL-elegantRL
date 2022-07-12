@@ -2,7 +2,7 @@ import sys
 import os
 import datetime
 import numpy as np
-import pandas as pd
+import math
 
 curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = os.path.split(curPath)[0]
@@ -288,6 +288,9 @@ class RequestEnvNoSim:
         for request in self.success_request_list:
             all_request_after_episode_list.append(request)
             all_request_id_after_episode_list.append(request['request_id'])
+        for request in self.violate_request_list:
+            all_request_after_episode_list.append(request)
+            all_request_id_after_episode_list.append(request['request_id'])
         all_request_id_list.sort()
         all_request_id_after_episode_list.sort()
         return all_request_id_after_episode_list == all_request_id_list
@@ -341,7 +344,7 @@ class RequestEnvNoSim:
         # 存放sla失败请求
         self.fail_request_list = []
         # 存放sla违约但未失败请求
-        self.violate_request_list=[]
+        self.violate_request_list = []
         self.all_request, self.arriveTime_request_dic = get_arrive_time_request_dic()
         self.active_request_group_by_remaining_time_list = self.get_new_arrive_request_list()
         self.active_request_group_by_remaining_time_list_to_state()
@@ -457,15 +460,15 @@ class RequestEnvNoSim:
 
     # def get_more_provision_area(self):
 
+    # sla违约率
     def get_violation_rate(self):
-        return len(self.violate_request_list)/ self.all_request_num
-     
+        return len(self.violate_request_list) / self.all_request_num
+
     def get_fail_rate(self):
-        return len(self.fail_request_list)/self.all_request_num
+        return len(self.fail_request_list) / self.all_request_num
 
     def get_over_prov_rate(self):
-        rt_area=0
+        rt_area = 0
         for req in self.all_request:
-            rt_area+=req['rtl']
-        return self.get_more_provision_sum()/rt_area
-
+            rt_area += req['rtl']
+        return self.get_more_provision_sum() / rt_area

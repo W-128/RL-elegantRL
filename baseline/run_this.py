@@ -41,7 +41,7 @@ THRESHOLD = env.threshold
 
 env.action_is_probability = False
 
-
+env.need_evaluate_env_correct=True 
 class RandomChooseConfig:
     '''训练相关参数'''
 

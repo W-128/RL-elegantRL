@@ -28,7 +28,7 @@ class BufferPPO:
     one_task_actor_path = 'RequestEnvNoSim0.8_PPO_0/actor_00975952_05888.821.pth'
     train_actor_path = 'RequestEnvNoSim0.8_PPO_0/actor_03443502_04748.414.pth'
     actor_path = rootPath + '/elegantrl/train/' + str(task_num) + '-task-end_reward=1/' + one_task_actor_path
-    # actor_path = rootPath + '/elegantrl/train/'+train_actor_path
+    actor_path = rootPath + '/elegantrl/train/' + 'RequestEnvNoSim0.85_PPO_0/actor_14902227_05938.618.pth'
 
     def __init__(self) -> None:
         self.env = RequestEnvNoSimForServer(BufferPPO.task_num, action_is_probability=True)
@@ -73,15 +73,15 @@ class BufferPPO:
             s_tensor = torch.as_tensor(state, dtype=torch.float32).unsqueeze(0)
             a_tensor = self.act(s_tensor)
             action = a_tensor.detach().cpu().numpy()[0]
-            
+
         self.env.do_action(action)
         self.logger.debug('action' + str(self.env.action_probability_to_number(action)))
-   
+
     def use_edf(self, state):
-        # num_state = []
-        # for s in state:
-        #     if s != 0:
-        #         num_state.append(s * self.env.threshold)
-        # if np.mean(num_state) <= self.env.threshold * (1.0 / 2.0):
-        #     return True
+        num_state = []
+        for s in state:
+            if s != 0:
+                num_state.append(s * self.env.threshold)
+        if np.mean(num_state) <= self.env.threshold * (1.0 / 2.0):
+            return True
         return False
