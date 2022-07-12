@@ -1,5 +1,5 @@
 import re
-from turtle import rt
+from statistics import mean
 import pandas as pd
 from requests import request
 import numpy as np
@@ -9,18 +9,19 @@ import datetime
 import math
 from matplotlib.pyplot import MultipleLocator
 
-method_name = 'ppo_1chu2'
-#接收到的总请求数量
-request_record_csv_file = 'log/retest/' + method_name + '_request_record.csv'
+method_name = 'ppo'
+file_name = 'env_with_violate/'
+# 接收到的总请求数量
+request_record_csv_file = 'log/' + file_name + method_name + '_request_record.csv'
 # request_record_csv = pd.read_csv( method_name + '_request_record.csv', header=0)
 request_record_csv = pd.read_csv(request_record_csv_file, header=0)
 
-log_file_path = 'log/retest/request_' + method_name + '.log'
+log_file_path = 'log/' + file_name + 'request_' + method_name + '.log'
 # log = open('log/request.log', mode='r').readlines()
 log = open(log_file_path, mode='r').readlines()
 
 # 未服务的时间上限
-unserved_time_up_bound=20
+unserved_time_up_bound = 20
 
 success_rate = 100.0 * len(log) / len(request_record_csv)
 print('失败率：{:.1f}%'.format(100 - success_rate))
@@ -41,9 +42,12 @@ for i in range(len(log)):
     rtl = int(re.search(rtl_pattern, log[i]).group().replace('rtllevel:', ''))
     # 维持key=end_time value=[request{rtl:response_time}]的success_request_dic_key_is_end_time
     if dt in success_request_dic_key_is_end_time:
-        success_request_dic_key_is_end_time[dt].append({'rtl': rtl, 'response_time': response_time / 1000.0})
+        if rtl in success_request_dic_key_is_end_time[dt]:
+            success_request_dic_key_is_end_time[dt][rtl].append(response_time / 1000.0)
+        else:
+            success_request_dic_key_is_end_time[dt][rtl]=[response_time / 1000.0]
     else:
-        success_request_dic_key_is_end_time[dt] = [{'rtl': rtl, 'response_time': response_time / 1000.0}]
+        success_request_dic_key_is_end_time[dt] = {rtl:[response_time / 1000.0]}
 
     #维持一个rtl_list
     if rtl not in rtl_respond_time_dic:
@@ -59,6 +63,7 @@ for i in range(len(log)):
     else:
         sla_violate_num += 1
 
+end_time_rtl_response_time=pd.Series(success_request_dic_key_is_end_time)
 print('违约率：{:.1f}%'.format(100.0 * sla_violate_num / len(request_record_csv)))
 # print('超供率：{:.1f}%'.format(more_provision_request_num / len(request_record_csv) * 100))
 # print('超供程度：{:.1f}%'.format(np.mean(more_provision_degree_list) * 100))
@@ -79,48 +84,35 @@ print('超供面积比例：{:.1f}%'.format(100.0 * more_provision_request_sum /
 for rtl in rtl_respond_time_dic:
     print('rtl:' + str(rtl) + '等待时间平均值:{:.1f}ms'.format(np.mean(rtl_respond_time_dic[rtl])))
 
-# 计算平均响应时间/每分钟
-baseTime = None
-timeData = []
+# # 计算平均响应时间
+# baseTime = None
+# timeData = []
+# # {rtl1:[],rtl2:[]}
+# for end_time in success_request_dic_key_is_end_time.keys():
+#     if baseTime == None:
+#         baseTime = end_time.replace(second=0)
+#     totalTimeDelta = end_time - baseTime
+#     deltaMinute = math.floor(totalTimeDelta.days * 24 * 60 + totalTimeDelta.seconds / 60)  # number of minutes
+#     while len(timeData) < deltaMinute + 1:
+#         timeData.append(0)
 
-# {rtl1:[],rtl2:[]}
-for end_time in success_request_dic_key_is_end_time.keys():
-    if baseTime == None:
-        baseTime = end_time.replace(second=0)
-    totalTimeDelta = end_time - baseTime
-    deltaMinute = math.floor(totalTimeDelta.days * 24 * 60 + totalTimeDelta.seconds / 60)  # number of minutes
-    while len(timeData) < deltaMinute + 1:
-        timeData.append(0)
+dayIndex = end_time_rtl_response_time.index
 
-dayIndex = pd.date_range(baseTime, periods=len(timeData), freq='min')
-
-rtl_response_time_list_dic = {}
+rtl_mean_response_time_dic = {}
 for rtl in rtl_respond_time_dic.keys():
-    rtl_response_time_list_dic[rtl] = []
-    for i in range(len(timeData)):
-        rtl_response_time_list_dic[rtl].append([np.nan])
-for end_time in success_request_dic_key_is_end_time.keys():
-    for request in success_request_dic_key_is_end_time[end_time]:
-        totalTimeDelta = end_time - baseTime
-        deltaMinute = math.floor(totalTimeDelta.days * 24 * 60 + totalTimeDelta.seconds / 60)  # number of minutes
-        if rtl_response_time_list_dic[request['rtl']][deltaMinute] == [np.nan]:
-            rtl_response_time_list_dic[request['rtl']][deltaMinute] = [request['response_time']]
-        else:
-            rtl_response_time_list_dic[request['rtl']][deltaMinute].append(request['response_time'])
-
-rtl_avg_response_time_dic = {}
-for rtl in rtl_respond_time_dic.keys():
-    rtl_avg_response_time_dic[rtl] = []
-
-for rtl in rtl_response_time_list_dic:
-    for response_time_list in rtl_response_time_list_dic[rtl]:
-        if response_time_list == [np.nan]:
-            rtl_avg_response_time_dic[rtl].append(np.nan)
-        else:
-            if np.mean(response_time_list) <= 20:
-                rtl_avg_response_time_dic[rtl].append(np.mean(response_time_list))
+    rtl_mean_response_time_dic[rtl]={}
+    for dt in end_time_rtl_response_time.index:
+        if rtl in end_time_rtl_response_time[dt]:
+            avg_response_time=mean(end_time_rtl_response_time[dt][rtl])
+            if avg_response_time<=unserved_time_up_bound:
+                rtl_mean_response_time_dic[rtl][dt]=avg_response_time
             else:
-                rtl_avg_response_time_dic[rtl].append(np.nan)
+                rtl_mean_response_time_dic[rtl][dt]=np.nan
+        else:
+            rtl_mean_response_time_dic[rtl][dt]=np.nan
+# 转为series
+for rtl in rtl_mean_response_time_dic.keys():
+    rtl_mean_response_time_dic[rtl]=pd.Series(rtl_mean_response_time_dic[rtl]).resample('20S').mean()
 
 # 画图
 rtl_tanent_dit = {2: 'tenantA', 7: 'tenantB'}
@@ -133,19 +125,19 @@ plt.ylabel('response time(seconds)')
 
 for rtl in rtl_respond_time_dic.keys():
     y_major_locator = MultipleLocator(2)
-    mask = np.isfinite(rtl_avg_response_time_dic[rtl])
-    line, = plt.plot(np.array(list(range(len(timeData))))[mask][:-1],
-                     np.array(rtl_avg_response_time_dic[rtl])[mask][:-1],
+    mask = np.isfinite(rtl_mean_response_time_dic[rtl])
+    line, = plt.plot(np.array(list(range(len(rtl_mean_response_time_dic[rtl]))))[mask][:-1],
+                     np.array(rtl_mean_response_time_dic[rtl])[mask][:-1],
                      ls="--",
                      lw=1)
-    plt.plot(list(range(len(timeData)))[:-1],
-             rtl_avg_response_time_dic[rtl][:-1],
+    plt.plot(list(range(len(rtl_mean_response_time_dic[rtl])))[:-1],
+             rtl_mean_response_time_dic[rtl][:-1],
              color=line.get_color(),
              lw=1.5,
              label=rtl_tanent_dit[rtl] + ' Response Time')
     # 辅助线
-    sup_line = [rtl for i in range(len(dayIndex))]
-    plt.plot(list(range(len(timeData)))[:-1],
+    sup_line = [rtl for i in range(len(rtl_mean_response_time_dic[rtl]))]
+    plt.plot(list(range(len(rtl_mean_response_time_dic[rtl])))[:-1],
              sup_line[:-1],
              color=line.get_color(),
              linestyle='--',
@@ -163,4 +155,4 @@ ax.spines['bottom'].set_color('gray')
 plt.legend(loc='upper right', fontsize=8)  # 标签位置
 plt.xlim(-0.5)
 plt.ylim(-0.5, 20)
-plt.savefig("log/retest/more_provision_" + method_name, dpi=400, bbox_inches='tight', transparent=True)
+plt.savefig('log/' + file_name + 'more_provision_' + method_name, dpi=400, bbox_inches='tight')#transparent=True#
