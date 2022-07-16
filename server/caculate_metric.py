@@ -9,8 +9,8 @@ import datetime
 import math
 from matplotlib.pyplot import MultipleLocator
 
-method_name = 'ppo_1chu2'
-file_name = 'env_with_violate/'
+method_name = 'ppo_5chu8'
+file_name = 'bucket_fair/'
 # 接收到的总请求数量
 request_record_csv_file = 'log/' + file_name + method_name + '_request_record.csv'
 # request_record_csv = pd.read_csv( method_name + '_request_record.csv', header=0)
@@ -112,7 +112,7 @@ for rtl in rtl_respond_time_dic.keys():
             rtl_mean_response_time_dic[rtl][dt]=np.nan
 # 转为series
 for rtl in rtl_mean_response_time_dic.keys():
-    rtl_mean_response_time_dic[rtl]=pd.Series(rtl_mean_response_time_dic[rtl]).resample('20S').mean()
+    rtl_mean_response_time_dic[rtl]=pd.Series(rtl_mean_response_time_dic[rtl]).resample('15S').mean()
 
 # 画图
 rtl_tanent_dit = {2: 'tenantA', 7: 'tenantB'}

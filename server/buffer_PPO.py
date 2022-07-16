@@ -10,7 +10,7 @@ rootPath = os.path.split(curPath)[0]
 sys.path.append(rootPath)
 # from elegantrl.envs.request_env_no_sim_for_server import RequestEnvNoSim
 import threading
-from elegantrl.envs.request_env_no_sim_for_server import RequestEnvNoSimForServer
+from request_env_no_sim_for_server import RequestEnvNoSimForServer
 from threading import Thread
 from concurrent.futures import ThreadPoolExecutor
 from elegantrl.agents.AgentPPO import AgentPPO
@@ -28,7 +28,7 @@ class BufferPPO:
     one_task_actor_path = 'RequestEnvNoSim0.8_PPO_0/actor_00975952_05888.821.pth'
     train_actor_path = 'RequestEnvNoSim0.8_PPO_0/actor_03443502_04748.414.pth'
     actor_path = rootPath + '/elegantrl/train/' + str(task_num) + '-task-end_reward=1/' + one_task_actor_path
-    actor_path = rootPath + '/elegantrl/train/' + 'RequestEnvNoSim0.85_PPO_0/actor_14902227_05938.618.pth'
+    actor_path = rootPath + '/elegantrl/train/edited_sim_env_train/RequestEnvNoSim0.85_PPO_0/actor_14902227_05938.618.pth'
 
     def __init__(self) -> None:
         self.env = RequestEnvNoSimForServer(BufferPPO.task_num, action_is_probability=True)
@@ -82,6 +82,6 @@ class BufferPPO:
         for s in state:
             if s != 0:
                 num_state.append(s * self.env.threshold)
-        if np.mean(num_state) <= self.env.threshold * (1.0 / 2.0):
+        if np.mean(num_state) <= self.env.threshold * (5.0 / 8.0):
             return True
         return False

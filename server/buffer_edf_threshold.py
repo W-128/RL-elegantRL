@@ -10,7 +10,7 @@ rootPath = os.path.split(curPath)[0]
 sys.path.append(rootPath)
 # from elegantrl.envs.request_env_no_sim_for_server import RequestEnvNoSim
 import threading
-from elegantrl.envs.request_env_no_sim_for_server import RequestEnvNoSimForServer
+from request_env_no_sim_for_server import RequestEnvNoSimForServer
 from threading import Thread
 from concurrent.futures import ThreadPoolExecutor
 from baseline.agent import EDFSubmitThreshold

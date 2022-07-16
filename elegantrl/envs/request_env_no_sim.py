@@ -1,8 +1,10 @@
 import sys
 import os
 import datetime
+from turtle import rt
 import numpy as np
-import math
+import pandas as pd
+from statistics import mean
 
 curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = os.path.split(curPath)[0]
@@ -53,8 +55,9 @@ class RequestEnvNoSim:
         # [剩余时间为0s的请求列表,剩余时间为1s...,剩余时间为5s的请求列表]
         # active_request_group_by_remaining_time_list是中间变量，随时间推移会有remainingTime的改变
         self.active_request_group_by_remaining_time_list = []
+        # key:rtl value request_list
         for i in range(self.state_dim):
-            self.active_request_group_by_remaining_time_list.append([])
+            self.active_request_group_by_remaining_time_list.append({})
         self.state_record = []
         # 动作空间维数 == 状态向量的维数
         # action=(从剩余时间为0的请求中提交的请求个数, 从剩余时间为1的请求中提交的请求个数,...,从剩余时间为5的请求中提交的请求个数)
@@ -64,7 +67,7 @@ class RequestEnvNoSim:
         for i in range(self.action_dim - 1):
             self.action_list.append(str(i))
         # 超过unserved_time_up_bound 请求视作失败
-        self.unserved_time_up_bound=20
+        self.unserved_time_up_bound = 20
         # 存放已过期请求尚未执行的请求
         self.violate_request_unsubmit = []
         # 存放未违约请求
@@ -72,7 +75,7 @@ class RequestEnvNoSim:
         # 存放sla失败请求
         self.fail_request_list = []
         # 存放sla违约但未失败且已经执行的请求
-        self.violate_request_list=[]
+        self.violate_request_list = []
         self.episode = 0
         self.call_get_reward_times = 0
         self.invalid_action_times = 0
@@ -185,12 +188,12 @@ class RequestEnvNoSim:
                         else:
                             self.arriveTime_request_dic[next_request['arrive_time']].append(next_request)
                         self.all_request.append(next_request)
-        
+
         # 提交量不足阈值时提交已经违约的
-        if np.sum(num_action)<self.threshold:
+        if np.sum(num_action) < self.threshold:
             remain_submit_times = self.threshold - np.sum(num_action)
             while (remain_submit_times != 0):
-                if len(self.violate_request_unsubmit)== 0:
+                if len(self.violate_request_unsubmit) == 0:
                     break
                 else:
                     req = self.violate_request_unsubmit.pop(0)
@@ -364,7 +367,7 @@ class RequestEnvNoSim:
         # 存放sla失败请求
         self.fail_request_list = []
         # 存放sla违约但未失败请求
-        self.violate_request_list=[]
+        self.violate_request_list = []
         self.all_request, self.arriveTime_request_dic = get_arrive_time_request_dic()
         self.active_request_group_by_remaining_time_list = self.get_new_arrive_request_list()
         self.active_request_group_by_remaining_time_list_to_state()
@@ -472,3 +475,40 @@ class RequestEnvNoSim:
         for req in self.all_request:
             rt_area += req['rtl']
         return self.get_more_provision_sum() / rt_area
+
+    def paint_more_porvision(self):
+        # requests = self.violate_request_list + self.success_request_list
+        # # success_request_dic_key_is_end_time key:end_time value:{key:rtl v:wait_time}
+        # success_request_dic_key_is_end_time = {}
+        # rtl_list = []
+        # for req in requests:
+        #     end_time = req['arrive_time'] + req['wait_time']
+        #     rtl = req['rtl']
+        #     if rtl not in rtl_list:
+        #         rtl_list.append(rtl)
+        #     if end_time in success_request_dic_key_is_end_time:
+        #         if rtl in success_request_dic_key_is_end_time[end_time]:
+        #             success_request_dic_key_is_end_time[end_time][rtl].append(req['wait_time'])
+        #         else:
+        #             success_request_dic_key_is_end_time[end_time][rtl] = [req['wait_time']]
+        #     else:
+        #         success_request_dic_key_is_end_time[end_time] = {rtl: [req['wait_time']]}
+        # end_time_rtl_response_time = pd.Series(success_request_dic_key_is_end_time)
+
+        # rtl_mean_response_time_dic = {}
+        # for rtl in rtl_list:
+        #     rtl_mean_response_time_dic[rtl] = {}
+        #     for end_time in end_time_rtl_response_time.index:
+        #         if rtl in end_time_rtl_response_time[end_time]:
+        #             avg_response_time = mean(end_time_rtl_response_time[end_time][rtl])
+        #             if avg_response_time<=self.unserved_time_up_bound:
+        #                 rtl_mean_response_time_dic[rtl][end_time]=avg_response_time
+        #             else:
+        #                 rtl_mean_response_time_dic[rtl][end_time]=np.nan
+        #         else:
+        #             rtl_mean_response_time_dic[rtl][end_time] = np.nan
+
+        # date_index=pd.date_range(start=datetime.datetime.now(),freq='S',periods=len(end_time_rtl_response_time.index))
+        # for rtl in rtl_list:
+        #     rtl_mean_response_time_dic[rtl]=pd.Series(rtl_mean_response_time_dic[rtl],index=date_index).resample('20S').mean()
+
