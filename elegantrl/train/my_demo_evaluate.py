@@ -86,7 +86,7 @@ def evaluate_agent():
     one_task_actor_path = 'RequestEnvNoSim0.8_PPO_0/actor_00975952_05888.821.pth'
     # one_task_actor_path = 'RequestEnvNoSim0.85_PPO_0/actor_14902227_05938.618.pth'
     actor_path = str(task_num) + '-task-end_reward=1/' + one_task_actor_path
-    # actor_path = one_task_actor_path
+    actor_path = 'edited_sim_env_train/RequestEnvNoSim0.85_PPO_0/actor_14902227_05938.618.pth'
 
     act.load_state_dict(torch.load(actor_path, map_location=lambda storage, loc: storage))
 

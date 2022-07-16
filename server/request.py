@@ -19,6 +19,9 @@ class Request:
         self.event = event
         self.is_success = True
 
+    def get_rtl(self):
+        return self.rtl
+
     def set_submit_time(self, submit_time):
         self.submit_time = submit_time
 
