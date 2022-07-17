@@ -83,7 +83,7 @@ def evaluate_agent():
     args = Arguments(agent, env=env)
     act = agent(args.net_dim, env.state_dim, env.action_dim).act
     two_task_actor_path = 'RequestEnvNoSim0.95_PPO_0/actor_04752485_05638.627.pth'
-    one_task_actor_path = 'RequestEnvNoSim0.8_PPO_0/actor_00230880_01924.799.pth'
+    one_task_actor_path = 'RequestEnvNoSim0.85_PPO_0/actor_00248219_01867.330.pth'
     actor_path =  one_task_actor_path
     # actor_path='actor_00975952_05888.821.pth'
     act.load_state_dict(torch.load(actor_path, map_location=lambda storage, loc: storage))

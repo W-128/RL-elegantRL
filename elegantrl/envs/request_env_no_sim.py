@@ -39,7 +39,7 @@ class RequestEnvNoSim:
             self.task_num = 1
             # 引擎能承受的单位时间最大并发量
             self.threshold = 45
-            self.beta = 0.04
+            self.beta = 0.06
         # 奖励参数设置
         self.A = 1
         # self.more_than_threshold_penalty_scale = -9
