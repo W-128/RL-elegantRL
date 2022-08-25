@@ -476,7 +476,7 @@ class RequestEnvNoSim:
             rt_area += req['rtl']
         return self.get_more_provision_sum() / rt_area
 
-    def paint_more_porvision(self):
+    # def paint_more_porvision(self):
         # requests = self.violate_request_list + self.success_request_list
         # # success_request_dic_key_is_end_time key:end_time value:{key:rtl v:wait_time}
         # success_request_dic_key_is_end_time = {}

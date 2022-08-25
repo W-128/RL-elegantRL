@@ -9,8 +9,8 @@ import datetime
 import math
 from matplotlib.pyplot import MultipleLocator
 
-method_name = 'ppo_5chu8'
-file_name = 'bucket_fair/'
+method_name = 'edf_threshold'
+file_name = 'unserved_violate/'
 # 接收到的总请求数量
 request_record_csv_file = 'log/' + file_name + method_name + '_request_record.csv'
 # request_record_csv = pd.read_csv( method_name + '_request_record.csv', header=0)
@@ -112,7 +112,7 @@ for rtl in rtl_respond_time_dic.keys():
             rtl_mean_response_time_dic[rtl][dt]=np.nan
 # 转为series
 for rtl in rtl_mean_response_time_dic.keys():
-    rtl_mean_response_time_dic[rtl]=pd.Series(rtl_mean_response_time_dic[rtl]).resample('15S').mean()
+    rtl_mean_response_time_dic[rtl]=pd.Series(rtl_mean_response_time_dic[rtl]).resample('20S').mean()
 
 # 画图
 rtl_tanent_dit = {2: 'tenantA', 7: 'tenantB'}
@@ -120,7 +120,7 @@ rtl_tanent_dit = {2: 'tenantA', 7: 'tenantB'}
 sns.set()
 fig = plt.figure()
 # plt.title("{} response_time".format(method_name))
-plt.xlabel('time(minutes)')
+plt.xlabel('Time(Sampling every 20s)')
 plt.ylabel('response time(seconds)')
 
 for rtl in rtl_respond_time_dic.keys():
@@ -153,6 +153,6 @@ ax.spines['left'].set_color('gray')
 ax.spines['top'].set_color('gray')
 ax.spines['bottom'].set_color('gray')
 plt.legend(loc='upper right', fontsize=8)  # 标签位置
-plt.xlim(-0.5)
+plt.xlim(-5)
 plt.ylim(-0.5, 20)
 plt.savefig('log/' + file_name + 'more_provision_' + method_name, dpi=400, bbox_inches='tight')#transparent=True#
