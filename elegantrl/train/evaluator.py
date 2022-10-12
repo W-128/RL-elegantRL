@@ -256,7 +256,7 @@ def get_episode_return_and_step_and_metrics(env, act):  # [ElegantRL.2022.01.01]
 
 def use_edf(state, env):
     num_state = []
-    for s in state:
+    for s in state[:env.N]:
         if s != 0:
             num_state.append(s * env.threshold)
     if np.mean(num_state) <= env.threshold * (1.0 / 2.0):

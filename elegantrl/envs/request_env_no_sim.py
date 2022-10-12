@@ -10,6 +10,7 @@ curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = os.path.split(curPath)[0]
 sys.path.append(rootPath)
 sys.path.append(curPath + '/my_common')
+sys.path.append(os.path.split(rootPath)[0])
 
 from my_common.get_data import get_arrive_time_request_dic
 from my_common.utils import generate_next_request
@@ -49,19 +50,20 @@ class RequestEnvNoSim:
         # action需要从概率到数量
         self.action_is_probability = True
         # 状态向量的维数=rtl的级别个数
-        self.N = 20
+        self.N = 10
+        # 预测向量长度
+        self.M = 10
         # state=(剩余时间为0的请求个数,...,剩余时间为5的请求个数)
-        self.state_dim = self.N + 1
+        self.state_dim = self.N + self.M
         # [剩余时间为0s的请求列表,剩余时间为1s...,剩余时间为5s的请求列表]
         # active_request_group_by_remaining_time_list是中间变量，随时间推移会有remainingTime的改变
         self.active_request_group_by_remaining_time_list = []
         # key:rtl value request_list
-        for i in range(self.state_dim):
+        for i in range(self.N):
             self.active_request_group_by_remaining_time_list.append({})
         self.state_record = []
-        # 动作空间维数 == 状态向量的维数
         # action=(从剩余时间为0的请求中提交的请求个数, 从剩余时间为1的请求中提交的请求个数,...,从剩余时间为5的请求中提交的请求个数)
-        self.action_dim = self.state_dim
+        self.action_dim = self.N
         # [0,1,...,5]
         self.action_list = []
         for i in range(self.action_dim - 1):
@@ -79,7 +81,7 @@ class RequestEnvNoSim:
         self.episode = 0
         self.call_get_reward_times = 0
         self.invalid_action_times = 0
-        self.need_evaluate_env_correct = False
+        self.need_evaluate_env_correct = True
         # 测试阶段将该值置为true
         self.invalid_action_optim = False
         self.avoid_more_than_threshold = False
@@ -260,11 +262,12 @@ class RequestEnvNoSim:
         for i in range(len(self.active_request_group_by_remaining_time_list)):
             self.active_request_group_by_remaining_time_list[i] = self.active_request_group_by_remaining_time_list[i] + \
                                                                   new_arrive_request_list[i]
+        predict_vector = self.get_predict_vector()
         # 状态更新
-        self.active_request_group_by_remaining_time_list_to_state()
+        self.active_request_group_by_remaining_time_list_to_state_with_predict_vector(predict_vector)
         # 判断是否结束
         remaining_request_is_done = True
-        for i in range(0, len(self.state_record) - 1):
+        for i in range(self.N):
             if self.state_record[i] != 0:
                 remaining_request_is_done = False
         if self.t > np.max(list(self.arriveTime_request_dic.keys())) and remaining_request_is_done:
@@ -278,6 +281,12 @@ class RequestEnvNoSim:
         for active_request_group_by_remaining_time in self.active_request_group_by_remaining_time_list:
             state.append(len(active_request_group_by_remaining_time))
         self.state_record = state
+
+    def active_request_group_by_remaining_time_list_to_state_with_predict_vector(self, predict_vector):
+        state = []
+        for active_request_group_by_remaining_time in self.active_request_group_by_remaining_time_list:
+            state.append(len(active_request_group_by_remaining_time))
+        self.state_record = state + predict_vector
 
     def is_correct(self):
         all_request_id_list = []
@@ -322,7 +331,7 @@ class RequestEnvNoSim:
     # 现在用t来表示，真实环境中收集[t-1,t)到来的请求直接给出
     def get_new_arrive_request_list(self):
         now_new_arrive_request_list = []
-        for i in range(self.state_dim):
+        for i in range(self.N):
             now_new_arrive_request_list.append([])
         if self.t in self.arriveTime_request_dic:
             for request_in_dic in self.arriveTime_request_dic[self.t]:
@@ -334,6 +343,19 @@ class RequestEnvNoSim:
                 request['remaining_time'] = request_in_dic['rtl']
                 now_new_arrive_request_list[request['remaining_time'] // TIME_UNIT_IN_ON_SECOND].append(request)
         return now_new_arrive_request_list
+
+    def get_predict_vector(self):
+        predict_vector = []
+        for i in range(self.M):
+            predict_vector.append(0)
+
+        for t in range(self.t + 1, self.t + self.M ):
+            if t in self.arriveTime_request_dic:
+                for request_in_dic in self.arriveTime_request_dic[t]:
+                    request_remaining_time = request_in_dic['arrive_time'] + request_in_dic['rtl'] - self.t
+                    if (request_remaining_time < self.M ):
+                        predict_vector[request_remaining_time] += 1
+        return predict_vector
 
     #   初始状态
     def reset(self):
@@ -350,7 +372,7 @@ class RequestEnvNoSim:
         self.violate_request_list = []
         self.all_request, self.arriveTime_request_dic = get_arrive_time_request_dic()
         self.active_request_group_by_remaining_time_list = self.get_new_arrive_request_list()
-        self.active_request_group_by_remaining_time_list_to_state()
+        self.active_request_group_by_remaining_time_list_to_state_with_predict_vector(self.get_predict_vector())
         self.next_request_num = 0
         self.success_request_dic_key_is_end_time = {}
         return self.state_record
@@ -370,7 +392,7 @@ class RequestEnvNoSim:
         self.violate_request_list = []
         self.all_request, self.arriveTime_request_dic = get_arrive_time_request_dic()
         self.active_request_group_by_remaining_time_list = self.get_new_arrive_request_list()
-        self.active_request_group_by_remaining_time_list_to_state()
+        self.active_request_group_by_remaining_time_list_to_state_with_predict_vector(self.get_predict_vector())
         self.next_request_num = 0
         self.success_request_dic_key_is_end_time = {}
         return self.active_request_group_by_remaining_time_list
@@ -476,39 +498,8 @@ class RequestEnvNoSim:
             rt_area += req['rtl']
         return self.get_more_provision_sum() / rt_area
 
-    # def paint_more_porvision(self):
-        # requests = self.violate_request_list + self.success_request_list
-        # # success_request_dic_key_is_end_time key:end_time value:{key:rtl v:wait_time}
-        # success_request_dic_key_is_end_time = {}
-        # rtl_list = []
-        # for req in requests:
-        #     end_time = req['arrive_time'] + req['wait_time']
-        #     rtl = req['rtl']
-        #     if rtl not in rtl_list:
-        #         rtl_list.append(rtl)
-        #     if end_time in success_request_dic_key_is_end_time:
-        #         if rtl in success_request_dic_key_is_end_time[end_time]:
-        #             success_request_dic_key_is_end_time[end_time][rtl].append(req['wait_time'])
-        #         else:
-        #             success_request_dic_key_is_end_time[end_time][rtl] = [req['wait_time']]
-        #     else:
-        #         success_request_dic_key_is_end_time[end_time] = {rtl: [req['wait_time']]}
-        # end_time_rtl_response_time = pd.Series(success_request_dic_key_is_end_time)
 
-        # rtl_mean_response_time_dic = {}
-        # for rtl in rtl_list:
-        #     rtl_mean_response_time_dic[rtl] = {}
-        #     for end_time in end_time_rtl_response_time.index:
-        #         if rtl in end_time_rtl_response_time[end_time]:
-        #             avg_response_time = mean(end_time_rtl_response_time[end_time][rtl])
-        #             if avg_response_time<=self.unserved_time_up_bound:
-        #                 rtl_mean_response_time_dic[rtl][end_time]=avg_response_time
-        #             else:
-        #                 rtl_mean_response_time_dic[rtl][end_time]=np.nan
-        #         else:
-        #             rtl_mean_response_time_dic[rtl][end_time] = np.nan
-
-        # date_index=pd.date_range(start=datetime.datetime.now(),freq='S',periods=len(end_time_rtl_response_time.index))
-        # for rtl in rtl_list:
-        #     rtl_mean_response_time_dic[rtl]=pd.Series(rtl_mean_response_time_dic[rtl],index=date_index).resample('20S').mean()
-
+# env = RequestEnvNoSim(1)
+# state = env.reset()
+# env.step(action=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+# env.step(action=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0])

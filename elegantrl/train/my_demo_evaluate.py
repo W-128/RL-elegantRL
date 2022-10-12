@@ -34,6 +34,7 @@ class RequestEnvNoSimWrapper():
         self.env.invalid_action_optim = True
         self.env.avoid_more_than_threshold = True
         self.threshold = self.env.threshold
+        self.N=self.env.N
 
     def reset(self):
         reset_state = np.asarray(self.env.reset(), dtype=np.float32) / self.env.threshold
@@ -86,10 +87,9 @@ def evaluate_agent():
     one_task_actor_path = 'RequestEnvNoSim0.8_PPO_0/actor_00975952_05888.821.pth'
     # one_task_actor_path = 'RequestEnvNoSim0.85_PPO_0/actor_14902227_05938.618.pth'
     actor_path = str(task_num) + '-task-end_reward=1/' + one_task_actor_path
-    actor_path = 'RequestEnvNoSim0.8_PPO_0/actor_05317803_05437.860.pth'
-    actor_path = 'RequestEnvNoSim0.85_PPO_0/actor_00005770_02041.880.pth'
-
-
+    # 第一次测试
+    # actor_path = 'RequestEnvNoSim0.9_PPO_0/actor_01743680_05411.790.pth'
+    actor_path = 'RequestEnvNoSim0.95_PPO_0/actor_03175567_05508.128.pth'
     act.load_state_dict(torch.load(actor_path, map_location=lambda storage, loc: storage))
 
     eval_times = 1

@@ -36,7 +36,7 @@ TIME_UNIT_IN_ON_SECOND = int(1 / TIME_UNIT)
 task_num = 1
 
 env = RequestEnvNoSim(task_num)
-
+N=env.N
 THRESHOLD = env.threshold
 
 env.action_is_probability = False
@@ -51,6 +51,7 @@ class RandomChooseConfig:
         self.result_path = curr_path + "/outputs/" + self.env_name + \
                            '/' + self.algo_name + '/results/'  # 保存结果的路径
         self.save = True  # 是否保存图片
+        
 
 
 class EDFSubmitThresholdConfig:
@@ -96,14 +97,14 @@ class FIFOConfig:
 print("==========================================================")
 edf_config = EDFConfig()
 make_dir(edf_config.result_path)  # 创建模型路径的文件夹
-agent = EDF(env.action_dim)
+agent = EDF(env.action_dim,N)
 success_request_dic_key_is_end_time, rtl_list = test(edf_config, env, agent)
 # plot_waiting_time_and_require_time(success_request_dic_key_is_end_time, rtl_list, edf_config)
 
 print("==========================================================")
 edf_submit_threshold_config = EDFSubmitThresholdConfig()
 make_dir(edf_submit_threshold_config.result_path)  # 创建模型路径的文件夹
-agent = EDFSubmitThreshold(env.action_dim)
+agent = EDFSubmitThreshold(env.action_dim,N)
 success_request_dic_key_is_end_time, rtl_list = test(edf_submit_threshold_config, env, agent)
 # plot_waiting_time_and_require_time(success_request_dic_key_is_end_time, rtl_list, edf_submit_threshold_config)
 

@@ -6,11 +6,11 @@ ARRIVE_TIME_INDEX = 1
 
 class RandomChoose:
 
-    def __init__(self, action_dim):
+    def __init__(self, action_dim,N):
         self.action_dim = action_dim  # 总的动作个数
-
+        self.N=N
     def predict(self, observation, threshold):
-        observation_temp = list(observation)
+        observation_temp = list(observation[:self.N])
         action = [0] * self.action_dim
         remaining_num = threshold
         while remaining_num != 0 and np.sum(observation_temp) != 0:
@@ -27,8 +27,9 @@ class RandomChoose:
 
 class EDF:
 
-    def __init__(self, action_dim):
+    def __init__(self, action_dim,N):
         self.action_dim = action_dim  # 总的动作个数
+        self.N=N
 
     def predict(self, observation, threshold):
         action = [0] * self.action_dim
@@ -38,11 +39,12 @@ class EDF:
 
 class EDFSubmitThreshold:
 
-    def __init__(self, action_dim):
+    def __init__(self, action_dim,N):
         self.action_dim = action_dim  # 总的动作个数
+        self.N=N
 
     def predict(self, observation, threshold):
-        observation_temp = list(observation)
+        observation_temp = list(observation[:self.N])
         action = [0] * self.action_dim
         remaining_num = threshold
         for index in range(len(observation_temp)):
