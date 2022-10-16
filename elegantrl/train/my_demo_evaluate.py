@@ -89,7 +89,7 @@ def evaluate_agent():
     actor_path = str(task_num) + '-task-end_reward=1/' + one_task_actor_path
     # 第一次测试
     # actor_path = 'RequestEnvNoSim0.9_PPO_0/actor_01743680_05411.790.pth'
-    actor_path = 'RequestEnvNoSim0.95_PPO_0/actor_03175567_05508.128.pth'
+    actor_path = 'RequestEnvNoSim0.85_PPO_0/actor_02038081_05940.198.pth'
     act.load_state_dict(torch.load(actor_path, map_location=lambda storage, loc: storage))
 
     eval_times = 1

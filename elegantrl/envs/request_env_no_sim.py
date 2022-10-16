@@ -47,6 +47,7 @@ class RequestEnvNoSim:
         self.success_reward_scale = 3
         self.more_than_threshold_penalty_scale = -9
         self.fail_penalty_scale = -3
+        self.beta = -0.1
         # action需要从概率到数量
         self.action_is_probability = True
         # 状态向量的维数=rtl的级别个数
@@ -234,17 +235,15 @@ class RequestEnvNoSim:
 
         # 超阈值惩罚
         more_than_threshold_penalty = 0
-        if sum(num_action) > self.threshold:
+        if sum(num_action) > self.threshold: 
             more_than_threshold_penalty = (sum(num_action) - self.threshold) / float(self.threshold)
 
         # 成功奖励
         success_reward = 0
-        decline = float(self.success_reward_scale - self.max_remaining_time_request_reward) / self.N
         for index in range(len(num_action)):
-            success_reward += ((self.success_reward_scale - index * decline) *
-                               min(num_action[index], self.threshold)) / float(self.threshold)
+            success_reward += (self.beta * index + self.success_reward_scale) * min(num_action[index], self.threshold) 
 
-        reward = success_reward \
+        reward = success_reward/ float(self.threshold) \
                  + fail_penalty \
                  + self.more_than_threshold_penalty_scale * more_than_threshold_penalty
 
@@ -349,11 +348,11 @@ class RequestEnvNoSim:
         for i in range(self.M):
             predict_vector.append(0)
 
-        for t in range(self.t + 1, self.t + self.M ):
+        for t in range(self.t + 1, self.t + self.M):
             if t in self.arriveTime_request_dic:
                 for request_in_dic in self.arriveTime_request_dic[t]:
                     request_remaining_time = request_in_dic['arrive_time'] + request_in_dic['rtl'] - self.t
-                    if (request_remaining_time < self.M ):
+                    if (request_remaining_time < self.M):
                         predict_vector[request_remaining_time] += 1
         return predict_vector
 
