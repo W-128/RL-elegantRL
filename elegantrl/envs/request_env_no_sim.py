@@ -5,7 +5,8 @@ from turtle import rt
 import numpy as np
 import pandas as pd
 from statistics import mean
-
+import logging
+import time 
 curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = os.path.split(curPath)[0]
 sys.path.append(rootPath)
@@ -13,7 +14,7 @@ sys.path.append(curPath + '/my_common')
 
 from my_common.get_data import get_arrive_time_request_dic
 from my_common.utils import generate_next_request
-
+from my_common.utils import get_logger
 # t=1000ms
 TIME_UNIT = 1
 TIME_UNIT_IN_ON_SECOND = int(1 / TIME_UNIT)
@@ -33,6 +34,7 @@ curr_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")  # 获取当前时
 class RequestEnvNoSim:
 
     def __init__(self, task_num):
+        self.logger = get_logger('env'+str(time.time()), logging.DEBUG)
         if task_num == 2:
             self.task_num = 2
             # 引擎能承受的单位时间最大并发量
@@ -46,10 +48,11 @@ class RequestEnvNoSim:
         self.success_reward_scale = 3
         self.more_than_threshold_penalty_scale = -9
         self.fail_penalty_scale = -3
+        self.beta = -0.1
         # action需要从概率到数量
         self.action_is_probability = True
         # 状态向量的维数=rtl的级别个数
-        self.N = 20
+        self.N = 10
         # state=(剩余时间为0的请求个数,...,剩余时间为5的请求个数)
         self.state_dim = self.N + 1
         # [剩余时间为0s的请求列表,剩余时间为1s...,剩余时间为5s的请求列表]
@@ -139,7 +142,7 @@ class RequestEnvNoSim:
 
         # debug
         # print('active_request_list:' + str(self.active_request_group_by_remaining_time_list))
-
+        self.logger.debug("状态平均值："+str(np.mean(self.state_record)))
         return self.state_record, reward, done, {}
 
     def step_fifo(self, submit_request_id_list):
@@ -237,12 +240,10 @@ class RequestEnvNoSim:
 
         # 成功奖励
         success_reward = 0
-        decline = float(self.success_reward_scale - self.max_remaining_time_request_reward) / self.N
         for index in range(len(num_action)):
-            success_reward += ((self.success_reward_scale - index * decline) *
-                               min(num_action[index], self.threshold)) / float(self.threshold)
+            success_reward += (self.beta * index + self.success_reward_scale) * min(num_action[index], self.threshold) 
 
-        reward = success_reward \
+        reward = success_reward/ float(self.threshold) \
                  + fail_penalty \
                  + self.more_than_threshold_penalty_scale * more_than_threshold_penalty
 
