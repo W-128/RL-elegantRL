@@ -42,7 +42,7 @@ class RequestEnvNoSim:
         if task_num == 1:
             self.task_num = 1
             # 引擎能承受的单位时间最大并发量
-            self.threshold = 45
+            self.threshold = 90
             self.max_remaining_time_request_reward = 1
         # 奖励参数设置
         self.success_reward_scale = 3

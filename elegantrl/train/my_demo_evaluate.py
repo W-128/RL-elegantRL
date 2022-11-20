@@ -140,5 +140,65 @@ def evaluate_agent():
     # plt.show()
 
 
+def evaluate_agent_scale():
+    # 流程任务数
+    task_num = 1
+    env = RequestEnvNoSimWrapper(task_num, more_than_threshold_penalty_scale=0)
+    agent = AgentPPO
+    args = Arguments(agent, env=env)
+    act = agent(args.net_dim, env.state_dim, env.action_dim).act
+    actor_path = 'RequestEnvNoSim0.85_PPO_0/actor_00005770_02041.880.pth'
+
+    pod_num_actor_path_dict={1:"",2:""}
+
+    act.load_state_dict(torch.load(actor_path, map_location=lambda storage, loc: storage))
+    act_path={1:"",2:""}
+    eval_times = 1
+    metric_ary = [get_episode_return_and_step_and_metrics(env, act) for _ in range(eval_times)]
+    metric_ary = np.array(metric_ary, dtype=np.float32)
+    s_avg, r_avg, violation_rate_avg, fail_rate_avg, more_provision_mean_avg, over_prov_rate_avg,variance_avg, more_than_threshold_rate_avg = metric_ary.mean(
+        axis=0)  # average of episode return and episode step
+
+    print(
+        "步数平均值：{:.1f}, 奖励：{:.1f}, sla违约率：{:.1f}%, sla失败率{:.1f}%, 超供均值{:.1f}, 超供面积比例：{:.1f}%, 每秒提交量方差：{:.1f},提交量大于阈值的概率：{:.5f}%"
+        .format(s_avg, r_avg, violation_rate_avg, fail_rate_avg, more_provision_mean_avg, over_prov_rate_avg*100,
+                variance_avg, more_than_threshold_rate_avg))
+
+    env.print_wait_time_avg()
+
+    success_request_dic_key_is_end_time, rtl_list = env.get_success_request_dic_key_is_end_time_and_rtl_list()
+    sns.set()
+    fig = plt.figure()
+    plt.xlabel('time(second)')
+    x = list(success_request_dic_key_is_end_time.keys())
+    rtl_avg_wait_time_dic = {}
+    # {rtl1:[],rtl2:[]}
+    for rtl in rtl_list:
+        rtl_avg_wait_time_dic[rtl] = []
+    for end_time in success_request_dic_key_is_end_time.keys():
+        rtl_wait_time_dic = {}
+        # {rtl1:[],rtl2:[]}
+        for rtl in rtl_list:
+            rtl_wait_time_dic[rtl] = []
+        for request in success_request_dic_key_is_end_time[end_time]:
+            rtl_wait_time_dic[request['rtl']].append(request['wait_time'])
+        for rtl in rtl_wait_time_dic:
+            if rtl_wait_time_dic[rtl] == []:
+                rtl_avg_wait_time_dic[rtl].append(np.nan)
+            else:
+                rtl_avg_wait_time_dic[rtl].append(np.mean(rtl_wait_time_dic[rtl]))
+
+    for rtl in rtl_list:
+        mask = np.isfinite(rtl_avg_wait_time_dic[rtl])
+        line, = plt.plot(np.array(x)[mask], np.array(rtl_avg_wait_time_dic[rtl])[mask], ls="--", lw=1)
+        plt.plot(x, rtl_avg_wait_time_dic[rtl], color=line.get_color(), lw=1.5, label=rtl)
+        # 辅助线
+        sup_line = [rtl for i in range(len(x))]
+        plt.plot(x, sup_line, color='black', linestyle='--', linewidth='1')
+
+    plt.legend()
+    plt.savefig("more_provision")
+    # plt.show()
 if __name__ == "__main__":
-    evaluate_agent()
+    # evaluate_agent()
+    evaluate_agent_scale()

@@ -5,6 +5,7 @@ import numpy as np
 from my_common.utils import make_dir
 from my_common.utils import get_logger
 import logging
+import queue
 
 logger = get_logger('evaluator', logging.INFO)
 
@@ -223,6 +224,52 @@ def get_episode_return_and_step_and_metrics(env, act):  # [ElegantRL.2022.01.01]
     episode_return = 0.0  # sum of rewards in an episode
     for episode_step in range(max_step):
         logger.debug('state' + str(state))
+        if use_edf(state, env):
+            action = [0] * env.action_dim
+            if state[0] != 0:
+                if state[0] <= 1:
+                    action[0] = 1
+                else:
+                    action[0] = env.threshold / state[0]
+
+        else:
+            s_tensor = torch.as_tensor(state, dtype=torch.float32, device=device).unsqueeze(0)
+            a_tensor = act(s_tensor)
+            if if_discrete:
+                a_tensor = a_tensor.argmax(dim=1)
+            action = (a_tensor.detach().cpu().numpy()[0])  # not need detach(), because using torch.no_grad() outside
+
+        # logger.debug('action' + str(env.action_probability_to_number(action)))
+        state, reward, done, _ = env.step(action)
+        episode_return += reward
+        if done:
+            break
+    episode_return = getattr(env, "episode_return", episode_return)
+    episode_step += 1
+    episode_violation_rate = env.get_violation_rate() * 100
+    episode_fail_rate = env.get_fail_rate() * 100
+    episode_more_provision_mean = env.get_more_provision_mean()
+    episode_over_prov_rate = env.get_over_prov_rate()
+    episode_variance = env.get_submit_request_num_per_second_variance()
+    episode_more_than_threshold_rate = env.get_more_than_threshold_rate() * 100
+    return episode_step, episode_return, episode_violation_rate, episode_fail_rate, episode_more_provision_mean, episode_over_prov_rate, episode_variance, episode_more_than_threshold_rate
+
+
+def get_episode_return_and_step_and_metrics(env, act):
+    max_step = env.max_step
+    if_discrete = env.if_discrete
+    device = next(act.parameters()).device  # net.parameters() is a Python generator.
+
+    # 如果state的各个元素平均值< threshold*2/3 用edf
+    state = env.reset()
+    episode_step = None
+    episode_return = 0.0  # sum of rewards in an episode
+    state_queue = queue.Queue(15)
+    for episode_step in range(max_step):
+        logger.debug('state' + str(state))
+        if(state_queue.full()):
+            state_queue.get()
+        state_queue.put(np.mean(state))
         if use_edf(state, env):
             action = [0] * env.action_dim
             if state[0] != 0:

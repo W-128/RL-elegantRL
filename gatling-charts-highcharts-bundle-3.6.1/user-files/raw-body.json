@@ -1,0 +1,10 @@
+{
+    "processDefinitionKey": "SimpleProcess",
+    "payloadType": "StartProcessPayload",
+    "variables": {
+      "firstName": "Paulo",
+      "lastName": "Silva",
+      "age": 25
+    },
+    "commandType":"StartProcessInstanceCmd"
+  }
